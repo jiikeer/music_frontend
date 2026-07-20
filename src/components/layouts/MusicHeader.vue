@@ -82,14 +82,12 @@ import {useRouter} from "vue-router";
 import { useUserStore } from "../../store/user";
 import { useConfigureStore } from "../../store/configure";
 import {ElMessage} from "element-plus";
-// 恢复utils导入，路径正确
 import { attachImageUrl } from "@/utils";
 
 const router = useRouter();
 const userStore =useUserStore();
 const configureStore =useConfigureStore();
 
-// 平台名称
 const musicName="校园音乐平台";
 
 const headerNavList=[
@@ -133,14 +131,9 @@ const menuList=[
 
 const keywords=ref("");
 
-// 用户状态
 const token=computed(()=>{
     return configureStore.token;
 });
-// 注释掉未使用的username，消除eslint报错
-// const username=computed(()=>{
-//     return userStore.username;
-// });
 const userPic = computed(() => userStore.userPic);
 
 function handleHeaderSelect(path){
@@ -188,8 +181,6 @@ function goMenu(path){
   top: 0;
   left: 0;
   right: 0; 
-  z-index: 100;
-  overflow: hidden; 
 }
 
 .header-left {
