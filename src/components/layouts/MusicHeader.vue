@@ -176,47 +176,53 @@ function goMenu(path){
   justify-content: space-between;
   padding: 0 40px;
   background: #ffffff;
-  box-shadow: 0 2px 8px #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  border-bottom: 1px solid #eeeeee;
 }
-
 .header-left {
   display: flex;
   align-items: center;
   gap: 20px;
 }
-
 .header-title {
   font-size: 22px;
-  font-weight: bold;
-  flex-shrink: 0;
-  white-space: nowrap; 
+  font-weight: 700;
+  color:#111111;
+  flex-shrink:0;
+  white-space:nowrap;
 }
 
+/* 搜索框 */
 .header-search {
-  width: 250px;
-  max-width: 250px;
-  min-width: 140px;
+  width:250px;
+  max-width:250px;
+  min-width:140px;
 }
 
-.header-menu {
-  border: none;
+:deep(.el-input__wrapper){
+  background:#fafafa;
+  box-shadow:0 0 0 1px #dddddd inset;
+}
+:deep(.el-input__inner){
+  color:#111;
+}
+:deep(.el-input__wrapper:hover){
+  box-shadow:0 0 0 1px #111 inset;
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  margin-left: 24px;
-}
-
+/* 用户区域 */
 .user-wrap {
-  display: flex;
-  align-items: center;
+  display:flex;
+  align-items:center;
 }
+/* 用户头像 */
 .user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 1px solid #eee;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  cursor:pointer;
+  border:1px solid #111;
 }
+
+
 </style>
