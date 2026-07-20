@@ -1,7 +1,11 @@
-import request from "@/utils/request";
+import { getBaseURL } from "./request";
 
-export function attachImageUrl(url) {
-  return url
-    ? `${request.getBaseURL()}${url}`
-    : "https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png";
+export function attachImageUrl(url){
+    if(!url){
+        return "";
+    }
+    if(url.startsWith("http")){
+        return url;
+    }
+    return getBaseURL()+"/"+url.replace(/^\/+/,"");
 }

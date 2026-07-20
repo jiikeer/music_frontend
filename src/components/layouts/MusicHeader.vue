@@ -50,16 +50,18 @@
         </el-menu>
 
         <!-- 已登录：头像下拉 -->
-        <el-dropdown
-            v-else
-            class="user-wrap"
-            trigger="click"
-        >
-            <el-image 
-                class="user-avatar" 
-                fit="cover" 
-                :src="attachImageUrl(userPic)"
-            />
+<el-dropdown
+    v-else
+    class="user-wrap"
+    trigger="click"
+>
+<div class="user-info">
+    <el-image
+        class="user-avatar"
+        fit="cover"
+        :src="avatarUrl"
+    />
+</div>
             <template #dropdown>
                 <el-dropdown-menu>
                     <el-dropdown-item
@@ -80,13 +82,11 @@
 import {ref,computed} from "vue";
 import {useRouter} from "vue-router";
 import { useUserStore } from "../../store/user";
-import { useConfigureStore } from "../../store/configure";
 import {ElMessage} from "element-plus";
 import { attachImageUrl } from "@/utils";
 
 const router = useRouter();
 const userStore =useUserStore();
-const configureStore =useConfigureStore();
 
 const musicName="校园音乐平台";
 
@@ -132,9 +132,14 @@ const menuList=[
 const keywords=ref("");
 
 const token=computed(()=>{
-    return configureStore.token;
+    return userStore.token;
 });
-const userPic = computed(() => userStore.userPic);
+const avatarUrl = computed(() => {
+  const avatarPath = userStore.avatar;
+  return attachImageUrl(avatarPath);
+});
+console.log("头像路径:",userStore.avatar);
+console.log("头像完整地址:",avatarUrl.value);
 
 function handleHeaderSelect(path){
     router.push(path);
@@ -159,7 +164,6 @@ function goSearch(){
 
 function goMenu(path){
     if(path==="logout"){
-        configureStore.setToken(false);
         userStore.logout();
         router.push("/");
         return;
@@ -210,19 +214,20 @@ function goMenu(path){
   box-shadow:0 0 0 1px #111 inset;
 }
 
-/* 用户区域 */
-.user-wrap {
-  display:flex;
-  align-items:center;
+.user-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
 }
-/* 用户头像 */
-.user-avatar {
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  cursor:pointer;
-  border:1px solid #111;
+.user-avatar{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    object-fit:cover;
+    border:1px solid #111;
 }
+
 
 
 </style>
