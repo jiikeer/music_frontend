@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useConfigureStore } from '@/store/configure'
 const routes = [
   {
     path: '/',
@@ -72,22 +71,6 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
-})
-
-// 全局前置守卫
-router.beforeEach((to, from, next) => {
-  const store = useConfigureStore()
-  const token = store.token
-
-  // 未登录 且 目标不是登录页 → 强制跳登录页
-  if (!token && to.path !== '/sign-in') {
-    return next('/sign-in')
-  }
-  // 已登录还访问登录页 → 跳首页
-  if (token && to.path === '/sign-in') {
-    return next('/')
-  }
-  next()
 })
 
 export default router
