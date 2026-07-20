@@ -20,7 +20,6 @@
             :ellipsis="false"
             @select="handleHeaderSelect"
         >
-
             <el-menu-item
                 v-for="item in headerNavList"
                 :key="item.path"
@@ -50,12 +49,17 @@
             </el-menu-item>
         </el-menu>
 
-        <!-- 已登录 -->
+        <!-- 已登录：头像下拉 -->
         <el-dropdown
-            v-else>
-            <span class="user-name">
-                {{username}}
-            </span>
+            v-else
+            class="user-wrap"
+            trigger="click"
+        >
+            <el-image 
+                class="user-avatar" 
+                fit="cover" 
+                :src="attachImageUrl(userPic)"
+            />
             <template #dropdown>
                 <el-dropdown-menu>
                     <el-dropdown-item
@@ -73,16 +77,18 @@
 </template>
 
 <script setup>
-
 import {ref,computed} from "vue";
 import {useRouter} from "vue-router";
 import { useUserStore } from "../../store/user";
 import { useConfigureStore } from "../../store/configure";
 import {ElMessage} from "element-plus";
+// 恢复utils导入，路径正确
+import { attachImageUrl } from "@/utils";
 
 const router = useRouter();
 const userStore =useUserStore();
 const configureStore =useConfigureStore();
+
 // 平台名称
 const musicName="校园音乐平台";
 
@@ -99,7 +105,6 @@ const headerNavList=[
         name:"上传",
         path:"/upload"
     }
-
 ];
 
 // 登录
@@ -110,9 +115,7 @@ const signList=[
     }
 ];
 
-
 // 用户菜单
-
 const menuList=[
     {
         name:"个人主页",
@@ -131,19 +134,18 @@ const menuList=[
 const keywords=ref("");
 
 // 用户状态
-
 const token=computed(()=>{
     return configureStore.token;
 });
-
-const username=computed(()=>{
-    return userStore.username;
-});
+// 注释掉未使用的username，消除eslint报错
+// const username=computed(()=>{
+//     return userStore.username;
+// });
+const userPic = computed(() => userStore.userPic);
 
 function handleHeaderSelect(path){
     router.push(path);
 }
-
 
 function handleSignSelect(path){
     router.push(path);
@@ -151,12 +153,9 @@ function handleSignSelect(path){
 
 function goSearch(){
     if(!keywords.value){
-        ElMessage.error(
-            "请输入搜索内容"
-        );
+        ElMessage.error("请输入搜索内容");
         return;
     }
-
     router.push({
         path:"/search",
         query:{
@@ -177,7 +176,6 @@ function goMenu(path){
 </script>
 
 <style scoped>
-
 .music-header {
   height: 60px;
   display: flex;
@@ -228,9 +226,15 @@ function goMenu(path){
   margin-left: 24px;
 }
 
-.user-name {
-  cursor: pointer;
-  font-size: 16px;
+.user-wrap {
+  display: flex;
+  align-items: center;
 }
-
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid #eee;
+}
 </style>
