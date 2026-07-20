@@ -196,8 +196,6 @@ function goMenu(path){
   display: flex;
   align-items: center;
   gap: 20px;
-  flex: 1;
-  min-width: 0; 
 }
 
 .header-title {
