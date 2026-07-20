@@ -177,10 +177,6 @@ function goMenu(path){
   padding: 0 40px;
   background: #ffffff;
   box-shadow: 0 2px 8px #ddd;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0; 
 }
 
 .header-left {
@@ -200,18 +196,15 @@ function goMenu(path){
   width: 250px;
   max-width: 250px;
   min-width: 140px;
-  flex-shrink: 1;
 }
 
 .header-menu {
   border: none;
-  flex-shrink: 1;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
   margin-left: 24px;
 }
 
