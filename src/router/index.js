@@ -55,6 +55,16 @@ const routes = [
       requireAuth: true
     },
     component: () => import("@/pages/user/UserSetting.vue"),
+  },
+  {
+    path:"/post/detail/:id",
+    name:"PostDetail",
+    component:()=>import("@/pages/post/PostDetail.vue")
+  },
+  {
+      path:"/song/detail/:id",
+      name:"SongDetail",
+      component:()=>import("@/pages/song/SongDetail.vue")
   }
 ]
 

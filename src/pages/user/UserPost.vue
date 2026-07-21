@@ -15,7 +15,6 @@
             我的歌曲
         </button>
     </div>
-
     <!-- ================= 帖子 ================= -->
     <div v-if="type==='post'" class="card-list">
         <el-empty
@@ -44,7 +43,34 @@
                     发布时间：
                     {{formatTime(item.createTime)}}
                 </div>
-
+                <div 
+                    class="audit-status"
+                    :class="getStatusClass(item.status)"
+                >
+                    {{getStatusText(item.status)}}
+                </div>
+            </div>
+            <div class="card-action">
+            <el-dropdown>
+                <el-icon class="more-icon">
+                    <MoreFilled />
+                </el-icon>
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item
+                            @click="viewPost(item.id)"
+                        >
+                            查看详情
+                        </el-dropdown-item>
+                        <el-dropdown-item
+                            divided
+                            @click="handleDeletePost(item.id)"
+                        >
+                            删除帖子
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
             </div>
         </div>
     </div>
@@ -71,10 +97,40 @@
                     上传时间：
                     {{formatTime(song.createTime)}}
                 </p>
+                <!-- 审核状态 -->
+                <div
+                    class="audit-status"
+                    :class="getStatusClass(song.status)"
+                >
+                    {{getStatusText(song.status)}}
+                </div>
             </div>
+            
             <audio v-if="song.url" controls
                 :src="getImage(song.url)"
             />
+            <div class="card-action">
+                <el-dropdown>
+                    <el-icon class="more-icon">
+                        <MoreFilled />
+                    </el-icon>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item
+                                @click="viewSong(song.id)"
+                            >
+                                查看详情
+                            </el-dropdown-item>
+                            <el-dropdown-item
+                                divided
+                                @click="handleDeleteSong(song.id)"
+                            >
+                                删除歌曲
+                            </el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
+            </div>
         </div>
     </div>
 </div>
@@ -84,10 +140,14 @@
 <script setup>
 import { ref, onMounted} from "vue";
 import { useUserStore} from "@/store/user";
-import { getUserPosts} from "@/api/post";
-import { getUserSongs} from "@/api/song";
+import { getUserPosts, deletePost} from "@/api/post";
+import { getUserSongs, deleteSong} from "@/api/song";
 import { attachImageUrl} from "@/utils";
+import { ElMessage, ElMessageBox} from "element-plus";
+import { MoreFilled } from "@element-plus/icons-vue";
+import { useRouter } from "vue-router"
 
+const router = useRouter()
 const userStore = useUserStore();
 // 当前显示类型
 const type = ref("post");
@@ -108,6 +168,28 @@ function formatTime(time){
         return "";
     }
     return time.replace("T"," ");
+}
+// 审核状态文字
+function getStatusText(status){
+    switch(status){
+        case 1:
+            return "审核通过";
+        case 0:
+            return "待审核";
+        case 2:
+            return "审核未通过";
+        default:
+            return "未知状态";
+    }
+}
+
+// 审核状态样式
+function getStatusClass(status){
+    return {
+        success:status===1,
+        waiting:status===0,
+        failed:status===2
+    }
 }
 // 加载作品
 async function loadWorks(){
@@ -138,6 +220,63 @@ async function loadWorks(){
         console.error(
             "加载作品失败",
             e
+        );
+    }
+}
+// 跳转详情
+function viewPost(id) {
+  router.push(`/post/detail/${id}`)
+}
+function viewSong(id) {
+  router.push(`/song/detail/${id}`)
+}
+async function handleDeletePost(id){
+    try{
+        await ElMessageBox.confirm(
+            "确定删除该帖子吗？",
+            "删除提示",
+            {
+                confirmButtonText:"确定",
+                cancelButtonText:"取消",
+                type:"warning"
+            }
+        );
+        const res = await deletePost( id, userStore.userId );
+        if(res.data.code===200){
+            ElMessage.success(
+                "删除成功"
+            );
+            loadWorks();
+        }
+    }
+    catch(e){
+        console.log(
+            "取消删除", e
+        );
+    }
+}
+async function handleDeleteSong(id){
+    try{
+        await ElMessageBox.confirm(
+            "确定删除该歌曲吗？",
+            "删除提示",
+            {
+                confirmButtonText:"确定",
+                cancelButtonText:"取消",
+                type:"warning"
+            }
+        );
+        const res = await deleteSong(id);
+        if(res.data.code===200){
+            ElMessage.success(
+                "删除成功"
+            );
+            loadWorks();
+        }
+    }
+    catch(e){
+        console.log(
+            "取消删除", e
         );
     }
 }
@@ -183,19 +322,23 @@ onMounted(()=>{ loadWorks();});
 
 .post-card{
     display:flex;
+    align-items:center;
     background:white;
     border-radius:12px;
     padding:20px;
     box-shadow:
     0 4px 12px rgba(0,0,0,.08);
+    position:relative;
 }
-
 .cover{
     width:180px;
     height:120px;
     object-fit:cover;
     border-radius:10px;
     margin-right:20px;
+}
+.post-info{
+    flex:1;
 }
 
 .post-info h3{
@@ -212,110 +355,68 @@ onMounted(()=>{ loadWorks();});
     color:#999;
     font-size:14px;
 }
-
-
-
-
-
-
 /* ===================
     歌曲
 =================== */
-
-
-
 .song-list{
-
     display:flex;
-
     flex-direction:column;
-
     gap:15px;
-
 }
-
-
-
 .song-card{
-
-
     display:flex;
-
     align-items:center;
-
     gap:20px;
-
-
     padding:20px;
-
-
     background:white;
-
-
     border-radius:12px;
-
-
     box-shadow:
     0 4px 12px rgba(0,0,0,.08);
-
-
-
 }
-
-
-
-
 .song-icon{
-
-
     width:50px;
-
     height:50px;
-
-
     border-radius:50%;
-
-
     background:#222;
-
-
     color:white;
-
-
     display:flex;
-
     justify-content:center;
-
     align-items:center;
-
-
     font-size:25px;
-
-
 }
-
-
-
 .song-info{
-
     flex:1;
-
 }
-
 .song-info h3{
     margin:0 0 8px;
 }
 .song-info p{
-
     color:#999;
-
 }
-
 audio{
     width:260px;
-
+}
+.audit-status{
+    margin-top:10px;
+    display:inline-block;
+    padding:4px 12px;
+    border-radius:20px;
+    font-size:14px;
 }
 
-
-
+/*审核通过*/
+.audit-status.success{
+    color:#16a34a;
+    background:#dcfce7;
+}
+/*待审核*/
+.audit-status.waiting{
+    color:#ca8a04;
+    background:#fef9c3;
+}
+/*审核失败*/
+.audit-status.failed{
+    color:#dc2626;
+    background:#fee2e2;
+}
 </style>
