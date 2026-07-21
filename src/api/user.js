@@ -83,7 +83,7 @@ export function updateUser(data){
 // 修改密码
 // POST /user/updatePassword
 // =====================
-export function updatePassword(data){
+export function updatePasswordApi(data){
     return api({
         method:"post",
         url:"/user/updatePassword",

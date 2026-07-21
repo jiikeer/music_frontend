@@ -68,10 +68,61 @@
       />
     </div>
 
+    <!-- 修改密码 -->
+    <div class="form-row password-row">
+    <label class="form-label">密码</label>
+    <el-button class="password-btn" @click="showPasswordDialog=true">
+        修改密码
+    </el-button>
+    </div>
+
     <div class="btn-group">
       <el-button class="save-btn" @click="saveUserInfo" :loading="loading">保存</el-button>
       <el-button class="cancel-btn" @click="goBack">取消</el-button>
     </div>
+
+    <el-dialog
+    v-model="showPasswordDialog"
+    title="修改密码"
+    width="400px"
+    custom-class="pwd-dialog"
+    >
+    <el-form class="pwd-form">
+        <el-form-item label="旧密码">
+            <el-input
+                v-model="passwordForm.oldPassword"
+                type="password"
+                show-password
+                placeholder="请输入旧密码"
+            />
+        </el-form-item>
+        <el-form-item label="新密码">
+            <el-input
+                v-model="passwordForm.password"
+                type="password"
+                show-password
+                placeholder="请输入新密码"
+            />
+        </el-form-item>
+        <el-form-item label="确认密码">
+            <el-input
+                v-model="passwordForm.confirmPassword"
+                type="password"
+                show-password
+                placeholder="再次输入密码"
+            />
+        </el-form-item>
+    </el-form>
+    <template #footer>
+    <div class="dialog-footer">
+        <el-button @click="showPasswordDialog=false">取消
+        </el-button>
+        <el-button type="primary" @click="updatePassword">
+        确认修改
+        </el-button>
+    </div>
+    </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -81,13 +132,19 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/user";
 import { attachImageUrl } from "@/utils";
 import { ElMessage } from "element-plus";
-import { updateUser, uploadAvatar, getUserDetail } from "@/api/user";
+import { updateUser, uploadAvatar, getUserDetail, updatePasswordApi} from "@/api/user";
 
 const router = useRouter();
 const userStore = useUserStore();
 const avatarInput = ref(null);
 const loading = ref(false);
+const showPasswordDialog = ref(false);
 
+const passwordForm = ref({
+    oldPassword:"",
+    password:"",
+    confirmPassword:""
+});
 const form = ref({
   id: "",
   username: "",
@@ -169,6 +226,57 @@ async function saveUserInfo() {
   }
 }
 
+async function updatePassword(){
+    if(
+        !passwordForm.value.oldPassword ||
+        !passwordForm.value.password
+    ){
+        ElMessage.warning(
+            "密码不能为空"
+        );
+        return;
+    }
+    if(
+        passwordForm.value.password
+        !==
+        passwordForm.value.confirmPassword
+    ){
+        ElMessage.warning(
+            "两次密码不一致"
+        );
+        return;
+    }
+    try {
+        const data={
+            id:userStore.userId,
+            username:userStore.username,
+            oldPassword:
+            passwordForm.value.oldPassword,
+            password:
+            passwordForm.value.password
+        };
+        const res =
+        await updatePasswordApi(data);
+        if(res.success){
+            ElMessage.success(
+                "密码修改成功，请重新登录"
+            );
+            showPasswordDialog.value=false;
+            userStore.logout();
+            router.push("/sign-in");
+        }else{
+            ElMessage.error(
+                res.message
+            );
+        }
+    }catch(err){
+        console.log(err);
+        ElMessage.error(
+            "密码修改失败"
+        );
+    }
+}
+
 function goBack() {
   router.push("/user-personal");
 }
@@ -232,7 +340,6 @@ function goBack() {
 :deep(.el-textarea__inner) {
   background: #2c2c2c;
   color: #eeeeee;
-  border: 1px solid #666666;
 }
 :deep(.el-input__count) {
   color: #999999;
@@ -296,10 +403,51 @@ function goBack() {
   background: transparent;
   color: #fff;
 }
-
-:deep(.el-textarea__inner:focus) {
-  outline: none;
-  border-color: #aaa !important;
+.password-btn{
+    width:150px;
+    height:45px;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+}
+.password-btn:hover{
+    background:#555;
 }
 
+:deep(.el-dialog) {
+  background: #1a1a1a;
+}
+:deep(.el-dialog__header) {
+  border-bottom: 1px solid #333;
+}
+:deep(.el-dialog__title) {
+  color: #eee;
+}
+:deep(.el-dialog__close) {
+  color: #999;
+}
+.pwd-form {
+  padding: 10px 0;
+}
+.dialog-input {
+  width: 100%;
+}
+:deep(.el-form-item__label) {
+  color: #ccc;
+  font-size: 16px;
+}
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+:deep(.dialog-footer .el-button) {
+  background: #fff;
+  color: #000;
+  border: none;
+}
+:deep(.el-dialog .el-button:hover){
+  background: #fff !important;
+}
 </style>
