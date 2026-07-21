@@ -65,7 +65,32 @@ const routes = [
      }
     ]
   },
-
+  {
+    path: '/admin',
+    name: 'admin-layout',
+    component: () => import('@/admin/layouts/AdminLayout.vue'),
+    children: [
+      {
+        path: '',
+        redirect: '/admin/users'
+      },
+      {
+        path: 'users',
+        name: 'admin-users',
+        component: () => import('@/admin/views/user/UserManage.vue')
+      },
+      {
+        path: 'songs',
+        name: 'admin-songs',
+        component: () => import('@/admin/views/song/SongManage.vue')
+      },
+      {
+        path: 'posts',
+        name: 'admin-posts',
+        component: () => import('@/admin/views/post/PostManage.vue')
+      }
+    ]
+  }
 ]
 
 const router = createRouter({
