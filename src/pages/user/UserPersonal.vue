@@ -80,12 +80,12 @@ const userName = computed(() => {
 
 // 标签配置
 const tabList = [
-  { index: "1", label: "帖子" },
+  { index: "1", label: "作品" },
   { index: "2", label: "收藏" },
   { index: "3", label: "点赞" },
   { index: "4", label: "评论" },
 ];
-const activeTab = ref("4");
+const activeTab = ref("1");
 
 // 顶部引入空占位
 const EmptyComp = { template: '<div></div>' }
