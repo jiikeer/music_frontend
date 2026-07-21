@@ -40,32 +40,22 @@ const routes = [
         name:'sign-up',
         component: () => import('@/pages/signUp/signUp.vue')
       },
-      {
-        path: "personal-data",
-        name: "personal-data",
-        component: () => import("@/pages/user/PersonalData.vue"),
-      },
-      {
-        path: "setting",
-        name: "setting",
-        meta: {
-          requireAuth: true,
-        },
-        component: () => import("@/pages/user/UserSetting.vue"),
-        children: [
-          {
-            path: "PersonalData",
-            name: "personalData",
-            meta: {
-              requireAuth: true,
-            },
-            component: () => import("@/pages/user/PersonalData.vue"),
-          }
-        ]
-     }
     ]
   },
-
+  {
+    path: "/user-personal",
+    name: "user-personal",
+    meta: { requireAuth: true },
+    component: () => import("@/pages/user/UserPersonal.vue")
+  },
+  {
+    path: "/setting",
+    name: "setting",
+    meta: {
+      requireAuth: true
+    },
+    component: () => import("@/pages/user/UserSetting.vue"),
+  }
 ]
 
 const router = createRouter({

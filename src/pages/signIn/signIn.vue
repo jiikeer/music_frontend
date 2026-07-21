@@ -34,7 +34,6 @@ import {reactive} from "vue";
 import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import {useUserStore} from "@/store/user";
-// 接口登录函数
 import { login as apiLogin } from "@/api/user";
 
 const router = useRouter();
@@ -45,13 +44,11 @@ const form = reactive({
     password:""
 });
 
-// 页面点击登录方法，改名 handleLogin 避免冲突
 async function handleLogin(){
     if(!form.username || !form.password){
         ElMessage.error("请输入账号密码");
         return;
     }
-    // 调用接口 apiLogin
     const res = await apiLogin(form);
     console.log(res);
     if(res.success){

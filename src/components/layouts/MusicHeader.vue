@@ -117,7 +117,7 @@ const signList=[
 const menuList=[
     {
         name:"个人主页",
-        path:"/personal"
+        path:"/user-personal"
     },
     {
         name:"设置",
