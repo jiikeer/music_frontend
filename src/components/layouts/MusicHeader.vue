@@ -81,7 +81,7 @@
 <script setup>
 import {ref,computed} from "vue";
 import {useRouter} from "vue-router";
-import { useUserStore } from "../../store/user";
+import { useUserStore } from "@/store/user";
 import {ElMessage} from "element-plus";
 import { attachImageUrl } from "@/utils";
 

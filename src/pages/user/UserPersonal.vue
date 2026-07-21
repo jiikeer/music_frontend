@@ -87,14 +87,17 @@ const tabList = [
 ];
 const activeTab = ref("4");
 
-// 根据标签切换对应子组件
+// 顶部引入空占位
+const EmptyComp = { template: '<div></div>' }
+
 const currentComponent = computed(() => {
   switch (activeTab.value) {
     case "1": return UserPost;
     case "2": return UserFavorite;
     case "3": return UserLike;
     case "4": return UserComment;
-    default: return null;
+    // 不返回 null，返回空组件
+    default: return EmptyComp;
   }
 });
 
