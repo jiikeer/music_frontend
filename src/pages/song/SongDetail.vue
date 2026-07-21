@@ -1,7 +1,15 @@
 <template>
 <div class="song-detail-page">
+    <!-- 返回 -->
+    <div 
+        class="back"
+        @click="$router.back()"
+    >
+         ← 返回
+    </div>
     <!-- 顶部歌曲信息 -->
     <div class="song-header">
+
         <!-- 左侧封面 -->
         <div class="cover-box">
             <img
@@ -11,6 +19,7 @@
         </div>
         <!-- 右侧信息 -->
         <div class="song-info">
+            
             <h1>
                 {{song.name}}
             </h1>
@@ -243,5 +252,11 @@ onMounted(()=>{
     line-height:2;
     color:#555;
     font-size:18px;
+}
+
+.back{
+    cursor:pointer;
+    color:#666;
+    margin-bottom:20px;
 }
 </style>

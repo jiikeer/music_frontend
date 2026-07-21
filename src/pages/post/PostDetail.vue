@@ -58,20 +58,10 @@
 </template>
 
 <script setup>
-import {
-    ref,
-    onMounted
-} from "vue";
-import {
-    useRoute
-} from "vue-router";
-import {
-    getPostDetail
-} from "@/api/post";
-import {
-    attachImageUrl
-} from "@/utils";
-// 使用存在的星星图标
+import { ref, onMounted} from "vue";
+import { useRoute} from "vue-router";
+import { getPostDetail} from "@/api/post";
+import { attachImageUrl} from "@/utils";
 import { Star, ChatDotRound } from '@element-plus/icons-vue'
 
 const route = useRoute();
