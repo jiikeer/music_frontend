@@ -26,7 +26,7 @@
     <!-- 性别单选 -->
     <div class="form-row">
       <label class="form-label">性别</label>
-      <el-radio-group v-model="form.gender">
+      <el-radio-group v-model="form.sex">
         <el-radio label="男"/>
         <el-radio label="女"/>
       </el-radio-group>
@@ -38,7 +38,7 @@
         v-model="form.birth"
         type="date"
         placeholder="请选择生日"
-        value-format="yyyy-MM-dd"
+        value-format="YYYY-MM-DD"
         class="form-input"
       />
     </div>
@@ -47,11 +47,19 @@
       <label class="form-label">电子邮箱</label>
       <el-input v-model="form.email" placeholder="请输入电子邮箱" class="form-input"/>
     </div>
+    <div class="form-row">
 
+  <label class="form-label">电话号码</label>
+  <el-input
+      v-model="form.phoneNum"
+      placeholder="请输入电话号码"
+      class="form-input"
+  />
+</div>
     <div class="form-row">
       <label class="form-label">个性签名</label>
       <el-input 
-        v-model="form.signature"
+        v-model="form.introduction"
         type="textarea"
         maxlength="100"
         placeholder="请输入个性签名"
@@ -83,21 +91,24 @@ const loading = ref(false);
 const form = ref({
   id: "",
   username: "",
-  gender: "",
+  sex: null,
   birth: "",
+  phoneNum:"",
   email: "",
-  signature: ""
+  introduction: ""
 });
+
 
 const avatarUrl = computed(() => attachImageUrl(userStore.avatar));
 
 onMounted(() => {
   form.value.id = userStore.userId;
   form.value.username = userStore.username || "";
-  form.value.gender = userStore.gender || "";
+  form.value.sex = userStore.sex || "";
   form.value.birth = userStore.birth || "";
   form.value.email = userStore.email || "";
-  form.value.signature = userStore.signature || "";
+  form.value.introduction = userStore.introduction || "";
+  form.value.phoneNum =userStore.phoneNum || "";
 });
 
 function openAvatarUpload() {
@@ -145,12 +156,14 @@ async function saveUserInfo() {
   if (!form.value.username.trim()) return ElMessage.warning("昵称不能为空");
   loading.value = true;
   try {
+    console.log("提交给后端的数据：", form.value)
     await updateUser(form.value);
     userStore.updateUserInfo(form.value);
     ElMessage.success("个人信息保存成功");
     router.push("/user-personal");
   } catch (err) {
-    ElMessage.error("保存失败，请稍后重试");
+    console.error("更新接口错误：", err)
+    ElMessage.error("保存失败，请检查填写内容");
   } finally {
     loading.value = false;
   }

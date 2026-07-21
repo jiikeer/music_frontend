@@ -8,10 +8,11 @@ export const useUserStore = defineStore(
         username: localStorage.getItem("username") || "",
         avatar: localStorage.getItem("avatar") || "",
         token: localStorage.getItem("token") || "",
-        gender: localStorage.getItem("gender") || "",
+        sex: localStorage.getItem("sex") || "",
         email: localStorage.getItem("email") || "",
-        signature: localStorage.getItem("signature") || "",
-        birth: localStorage.getItem("birth") || ""
+        introduction: localStorage.getItem("introduction") || "",
+        birth: localStorage.getItem("birth") || "",
+        phoneNum: localStorage.getItem("phoneNum") || ""
     }),
 
     actions:{
@@ -20,18 +21,20 @@ export const useUserStore = defineStore(
             this.userId = user.id;
             this.username = user.username;
             this.avatar = user.avatar || "";
-            this.gender = user.gender || "";
+            this.sex = user.sex || "";
             this.email = user.email || "";
-            this.signature = user.signature || "";
+            this.introduction = user.introduction || "";
             this.birth = user.birth || "";
+            this.phoneNum = user.phoneNum || "";
 
             localStorage.setItem("userId", user.id);
             localStorage.setItem("username", user.username);
             localStorage.setItem("avatar", user.avatar || "");
-            localStorage.setItem("gender", user.gender || "");
+            localStorage.setItem("sex", user.sex || "");
             localStorage.setItem("email", user.email || "");
-            localStorage.setItem("signature", user.signature || "");
+            localStorage.setItem("introduction", user.introduction || "");
             localStorage.setItem("birth", user.birth || "");
+            localStorage.setItem("phoneNum", user.phoneNum || "");
             localStorage.setItem("token", "login");
             this.token = "login";
         },
@@ -42,29 +45,32 @@ export const useUserStore = defineStore(
             this.username = "";
             this.avatar = "";
             this.token = "";
-            this.gender = "";
+            this.sex = "";
             this.email = "";
-            this.signature = "";
+            this.introduction = "";
             this.birth = "";
+            this.phoneNum = "";
 
             localStorage.removeItem("userId");
             localStorage.removeItem("username");
             localStorage.removeItem("avatar");
             localStorage.removeItem("token");
-            localStorage.removeItem("gender");
+            localStorage.removeItem("sex");
             localStorage.removeItem("email");
-            localStorage.removeItem("signature");
+            localStorage.removeItem("introduction");
             localStorage.removeItem("birth");
+            localStorage.removeItem("phoneNum");
         },
         initUser(){
             this.userId = localStorage.getItem("userId") || "";
             this.username = localStorage.getItem("username") || "";
             this.avatar = localStorage.getItem("avatar") || "";
             this.token = localStorage.getItem("token") || "";
-            this.gender = localStorage.getItem("gender") || "";
+            this.sex = localStorage.getItem("sex") || "";
             this.email = localStorage.getItem("email") || "";
-            this.signature = localStorage.getItem("signature") || "";
+            this.introduction = localStorage.getItem("introduction") || "";
             this.birth = localStorage.getItem("birth") || "";
+            this.phoneNum = localStorage.getItem("phoneNum") || "";
         },
 
         setAvatar(newAvatarUrl){
@@ -77,21 +83,25 @@ export const useUserStore = defineStore(
                 this.username = info.username;
                 localStorage.setItem("username", info.username);
             }
-            if(info.gender !== undefined){
-                this.gender = info.gender;
-                localStorage.setItem("gender", info.gender);
+            if(info.sex !== undefined){
+                this.sex = info.sex;
+                localStorage.setItem("sex", info.sex);
             }
             if(info.email !== undefined){
                 this.email = info.email;
                 localStorage.setItem("email", info.email);
             }
-            if(info.signature !== undefined){
-                this.signature = info.signature;
-                localStorage.setItem("signature", info.signature);
+            if(info.introduction !== undefined){
+                this.introduction = info.introduction;
+                localStorage.setItem("introduction", info.introduction);
             }
             if(info.birth !== undefined){
                 this.birth = info.birth;
                 localStorage.setItem("birth", info.birth);
+            }
+            if(info.phoneNum !== undefined){
+                this.phoneNum = info.phoneNum;
+                localStorage.setItem("phoneNum", info.phoneNum);
             }
         }
     },
