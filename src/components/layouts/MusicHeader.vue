@@ -138,8 +138,6 @@ const avatarUrl = computed(() => {
   const avatarPath = userStore.avatar;
   return attachImageUrl(avatarPath);
 });
-console.log("头像路径:",userStore.avatar);
-console.log("头像完整地址:",avatarUrl.value);
 
 function handleHeaderSelect(path){
     router.push(path);
@@ -196,7 +194,6 @@ function goMenu(path){
   white-space:nowrap;
 }
 
-/* 搜索框 */
 .header-search {
   width:250px;
   max-width:250px;
@@ -213,7 +210,6 @@ function goMenu(path){
 :deep(.el-input__wrapper:hover){
   box-shadow:0 0 0 1px #111 inset;
 }
-
 .user-info{
     display:flex;
     align-items:center;
@@ -225,9 +221,91 @@ function goMenu(path){
     height:36px;
     border-radius:50%;
     object-fit:cover;
-    border:1px solid #111;
+}
+.header-menu{
+    border:none;
+    background:#fff;
+    --el-menu-hover-bg-color:#111;
+    --el-menu-active-color:#fff;
+    --el-menu-text-color:#333;
 }
 
+:deep(.header-menu .el-menu-item){
+    color:#333;
+    height:60px;
+    line-height:60px;
+    font-size:15px;
+    border:none;
+}
 
+:deep(.header-menu .el-menu-item:hover){
+    border-bottom:#111 solid 2px;
+    background:transparent !important;
+    color:#111 !important;
+}
 
+:deep(.header-menu .el-menu-item.is-active){
+    border-bottom:#111 solid 2px;
+    background:transparent !important;
+    color:#111 !important;
+    border-bottom:none !important;
+}
+.sign-menu{
+    border:none;
+    background:#fff;
+    --el-menu-active-color:#fff;
+}
+
+:deep(.sign-menu .el-menu-item){
+    border:none;
+}
+
+:deep(.sign-menu .el-menu-item:hover){
+    border-bottom:#111 solid 2px;
+    color:#111 !important;
+    background:transparent ;
+}
+:deep(.sign-menu .el-menu-item.is-active){
+    border-bottom:#111 solid 2px;
+    color:#111 !important;
+    background:transparent !important;
+}
+
+/* ========== 下拉用户菜单 统一登录导航样式（修复移出蓝底残留） ========== */
+:deep(.el-dropdown-menu) {
+  border: none;
+  background: #fff;
+  padding: 0;
+}
+
+:deep(.el-dropdown-menu__item) {
+  border: none;
+  font-size: 15px;
+  color: #6c6c6c;
+  padding: 0 20px;
+  height: 48px;
+  line-height: 48px;
+  outline: none !important;
+}
+
+:deep(.el-dropdown-menu__item:not(.is-disabled):hover) {
+  color: #111 !important;
+  background: transparent !important;
+}
+
+:deep(.el-dropdown-menu__item:not(.is-disabled):focus) {
+  color: #111 !important;
+  background: transparent !important;
+}
+
+:deep(.el-dropdown-menu__item.is-hovering) {
+  color: #111 !important;
+  background: transparent !important;
+}
+
+:deep(.el-dropdown-menu__item:hover),
+:deep(.el-dropdown-menu__item:focus),
+:deep(.el-dropdown-menu__item.is-hovering) {
+  background-color: transparent !important;
+}
 </style>
