@@ -1,311 +1,181 @@
 <template>
-<header class="music-header">
-    <!-- 左侧区域 -->
+  <header class="music-header">
     <div class="header-left">
-        <!-- 网站名称 -->
-        <div class="header-title">
-            {{ musicName }}
-        </div>
-        <!-- 搜索框 -->
-        <el-input
-            class="header-search"
-            v-model="keywords"
-            placeholder="搜索歌曲"
-            @keyup.enter="goSearch"
-        />
-        <!-- 导航 -->
-        <el-menu
-            class="header-menu"
-            mode="horizontal"
-            :ellipsis="false"
-            @select="handleHeaderSelect"
-        >
-            <el-menu-item
-                v-for="item in headerNavList"
-                :key="item.path"
-                :index="item.path"
-            >
-                {{item.name}}
-            </el-menu-item>
-        </el-menu>
+      <div class="header-title">{{ musicName }}</div>
+      <el-input class="header-search" v-model="keywords" placeholder="搜索歌曲" @keyup.enter="goSearch" />
+      <el-menu class="header-menu" mode="horizontal" :ellipsis="false" @select="handleHeaderSelect">
+        <el-menu-item v-for="item in headerNavList" :key="item.path" :index="item.path">
+          {{ item.name }}
+        </el-menu-item>
+      </el-menu>
     </div>
 
-    <!-- 右侧 -->
     <div class="header-right">
-        <!-- 未登录 -->
-        <el-menu
-            v-if="!token"
-            class="sign-menu"
-            mode="horizontal"
-            :ellipsis="false"
-            @select="handleSignSelect"
-        >
-            <el-menu-item
-                v-for="item in signList"
-                :key="item.path"
-                :index="item.path"
-            >
-                {{item.name}}
-            </el-menu-item>
-        </el-menu>
+      <el-menu v-if="!token" class="sign-menu" mode="horizontal" :ellipsis="false" @select="handleSignSelect">
+        <el-menu-item v-for="item in signList" :key="item.path" :index="item.path">
+          {{ item.name }}
+        </el-menu-item>
+      </el-menu>
 
-        <!-- 已登录：头像下拉 -->
-<el-dropdown
-    v-else
-    class="user-wrap"
-    trigger="click"
->
-<div class="user-info">
-    <el-image
-        class="user-avatar"
-        fit="cover"
-        :src="avatarUrl"
-    />
-</div>
-            <template #dropdown>
-                <el-dropdown-menu>
-                    <el-dropdown-item
-                        v-for="item in menuList"
-                        :key="item.path"
-                        @click="goMenu(item.path)"
-                    >
-                        {{item.name}}
-                    </el-dropdown-item>
-                </el-dropdown-menu>
-            </template>
-        </el-dropdown>
+      <el-dropdown v-else class="user-wrap" trigger="click">
+        <div class="user-info">
+          <el-image class="user-avatar" fit="cover" :src="avatarUrl" />
+        </div>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item v-for="item in menuList" :key="item.path" @click="goMenu(item.path)">
+              {{ item.name }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
-</header>
+  </header>
 </template>
 
 <script setup>
-import {ref,computed} from "vue";
-import {useRouter} from "vue-router";
-import { useUserStore } from "@/store/user";
-import {ElMessage} from "element-plus";
-import { attachImageUrl } from "@/utils";
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/store/user'
+import { ElMessage } from 'element-plus'
+import { attachImageUrl } from '@/utils'
 
-const router = useRouter();
-const userStore =useUserStore();
+const router = useRouter()
+const userStore = useUserStore()
 
-const musicName="校园音乐平台";
+const musicName = '校园音乐平台'
+const headerNavList = [
+  { name: '首页', path: '/' },
+  { name: '歌曲', path: '/song-list' },
+  { name: '社区', path: '/community' },
+  { name: '上传', path: '/upload' }
+]
+const signList = [{ name: '登录', path: '/sign-in' }]
+const menuList = [
+  { name: '个人主页', path: '/user-personal' },
+  { name: '编辑资料', path: '/setting' },
+  { name: '退出', path: 'logout' }
+]
+const keywords = ref('')
+const token = computed(() => userStore.token)
+const avatarUrl = computed(() => attachImageUrl(userStore.avatar))
 
-const headerNavList=[
-    {
-        name:"首页",
-        path:"/"
-    },
-    {
-        name:"社区",
-        path:"/community"
-    },
-    {
-        name:"上传",
-        path:"/upload"
-    }
-];
-
-// 登录
-const signList=[
-    {
-        name:"登录",
-        path:"/sign-in"
-    }
-];
-
-// 用户菜单
-const menuList=[
-    {
-        name:"个人主页",
-        path:"/user-personal"
-    },
-    {
-        name:"设置",
-        path:"/setting"
-    },
-    {
-        name:"退出",
-        path:"logout"
-    }
-];
-
-const keywords=ref("");
-
-const token=computed(()=>{
-    return userStore.token;
-});
-const avatarUrl = computed(() => {
-  const avatarPath = userStore.avatar;
-  return attachImageUrl(avatarPath);
-});
-
-function handleHeaderSelect(path){
-    router.push(path);
+function handleHeaderSelect(path) {
+  router.push(path)
 }
 
-function handleSignSelect(path){
-    router.push(path);
+function handleSignSelect(path) {
+  router.push(path)
 }
 
-function goSearch(){
-    if(!keywords.value){
-        ElMessage.error("请输入搜索内容");
-        return;
-    }
-    router.push({
-        path:"/search",
-        query:{
-            keyword:keywords.value
-        }
-    });
+function goSearch() {
+  if (!keywords.value) {
+    ElMessage.error('请输入搜索内容')
+    return
+  }
+  router.push({ path: '/search', query: { keyword: keywords.value } })
 }
 
-function goMenu(path){
-    if(path==="logout"){
-        userStore.logout();
-        router.push("/");
-        return;
-    }
-    router.push(path);
+function goMenu(path) {
+  if (path === 'logout') {
+    userStore.logout()
+    router.push('/')
+    return
+  }
+  router.push(path)
 }
 </script>
 
 <style scoped>
 .music-header {
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  border-bottom: 1px solid #eeeeee;
+  padding: 0 28px;
+  background: #111;
+  color: #f5f5f5;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
-.header-left {
+.header-left, .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 .header-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  color:#111111;
-  flex-shrink:0;
-  white-space:nowrap;
+  white-space: nowrap;
 }
-
 .header-search {
-  width:250px;
-  max-width:250px;
-  min-width:140px;
+  width: 220px;
 }
-
-:deep(.el-input__wrapper){
-  background:#fafafa;
-  box-shadow:0 0 0 1px #dddddd inset;
+:deep(.el-input__wrapper) {
+  background: #1f1f1f;
+  box-shadow: 0 0 0 1px #444 inset;
 }
-:deep(.el-input__inner){
-  color:#111;
+:deep(.el-input__inner) {
+  color: #fff;
 }
-:deep(.el-input__wrapper:hover){
-  box-shadow:0 0 0 1px #111 inset;
+.header-menu, .sign-menu {
+  border: none;
+  background: transparent;
+  --el-menu-hover-bg-color: #222;
+  --el-menu-active-color: #fff;
+  --el-menu-text-color: #fff;
 }
-.user-info{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    cursor:pointer;
+:deep(.header-menu .el-menu-item), :deep(.sign-menu .el-menu-item) {
+  color: #f0f0f0;
+  height: 64px;
+  line-height: 64px;
+  font-size: 14px;
+  border: none;
 }
-.user-avatar{
-    width:36px;
-    height:36px;
-    border-radius:50%;
-    object-fit:cover;
+:deep(.header-menu .el-menu-item:hover), :deep(.sign-menu .el-menu-item:hover) {
+  background: transparent !important;
+  color: #fff !important;
 }
-.header-menu{
-    border:none;
-    background:#fff;
-    --el-menu-hover-bg-color:#111;
-    --el-menu-active-color:#fff;
-    --el-menu-text-color:#333;
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
 }
-
-:deep(.header-menu .el-menu-item){
-    color:#333;
-    height:60px;
-    line-height:60px;
-    font-size:15px;
-    border:none;
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #444;
 }
-
-:deep(.header-menu .el-menu-item:hover){
-    border-bottom:#111 solid 2px;
-    background:transparent !important;
-    color:#111 !important;
+.user-name {
+  font-size: 13px;
 }
-
-:deep(.header-menu .el-menu-item.is-active){
-    border-bottom:#111 solid 2px;
-    background:transparent !important;
-    color:#111 !important;
-    border-bottom:none !important;
-}
-.sign-menu{
-    border:none;
-    background:#fff;
-    --el-menu-active-color:#fff;
-}
-
-:deep(.sign-menu .el-menu-item){
-    border:none;
-}
-
-:deep(.sign-menu .el-menu-item:hover){
-    border-bottom:#111 solid 2px;
-    color:#111 !important;
-    background:transparent ;
-}
-:deep(.sign-menu .el-menu-item.is-active){
-    border-bottom:#111 solid 2px;
-    color:#111 !important;
-    background:transparent !important;
-}
-
-/* ========== 下拉用户菜单 统一登录导航样式（修复移出蓝底残留） ========== */
 :deep(.el-dropdown-menu) {
-  border: none;
-  background: #fff;
-  padding: 0;
+  background: #111;
+  border: 1px solid #333;
 }
-
 :deep(.el-dropdown-menu__item) {
-  border: none;
-  font-size: 15px;
-  color: #6c6c6c;
-  padding: 0 20px;
-  height: 48px;
-  line-height: 48px;
-  outline: none !important;
+  color: #f5f5f5;
 }
-
-:deep(.el-dropdown-menu__item:not(.is-disabled):hover) {
-  color: #111 !important;
-  background: transparent !important;
+:deep(.el-dropdown-menu__item:hover) {
+  background: #222 !important;
+  color: #fff !important;
 }
-
-:deep(.el-dropdown-menu__item:not(.is-disabled):focus) {
-  color: #111 !important;
-  background: transparent !important;
-}
-
-:deep(.el-dropdown-menu__item.is-hovering) {
-  color: #111 !important;
-  background: transparent !important;
-}
-
-:deep(.el-dropdown-menu__item:hover),
-:deep(.el-dropdown-menu__item:focus),
-:deep(.el-dropdown-menu__item.is-hovering) {
-  background-color: transparent !important;
+@media (max-width: 900px) {
+  .music-header {
+    padding: 0 14px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .header-left, .header-right {
+    flex-wrap: wrap;
+  }
+  .header-search {
+    width: 180px;
+  }
 }
 </style>

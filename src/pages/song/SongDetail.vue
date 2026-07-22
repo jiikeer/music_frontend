@@ -1,262 +1,174 @@
 <template>
-<div class="song-detail-page">
-    <!-- 返回 -->
-    <div 
-        class="back"
-        @click="$router.back()"
-    >
-         ← 返回
-    </div>
-    <!-- 顶部歌曲信息 -->
-    <div class="song-header">
+  <div class="song-detail">
+    <div class="card" v-if="song">
+      <div class="back" @click="$router.back()">← 返回</div>
+      <h1>{{ song.name }}</h1>
+      <img :src="getImage(song.cover)" class="cover" />
 
-        <!-- 左侧封面 -->
-        <div class="cover-box">
-            <img
-                :src="getImage(song.cover)"
-                class="song-cover"
-            >
-        </div>
-        <!-- 右侧信息 -->
-        <div class="song-info">
-            
-            <h1>
-                {{song.name}}
-            </h1>
-            <div class="time">
-                上传时间：
-                {{formatTime(song.createTime)}}
-            </div>
-            <!-- 数据统计 -->
-            <div class="statistics">
-                <div class="stat-item">
-                    <el-icon>
-                        <VideoPlay/>
-                    </el-icon>
-                    <span>
-                        {{song.playCount || 0}}
-                    </span>
-                </div>
-                <div class="stat-item">
-                    <el-icon>
-                        <Star/>
-                    </el-icon>
-                    <span>
-                        {{song.collectCount || 0}}
-                    </span>
-                </div>
-            </div>
-            <!-- 播放器 -->
-            <audio
-                v-if="song.url"
-                controls
-                :src="getImage(song.url)"
-                class="audio"
-            />
-            <!-- 审核状态 -->
-            <div
-                class="audit-status"
-                :class="getStatusClass(song.status)"
-            >
-                {{getStatusText(song.status)}}
-            </div>
-            <!-- 驳回原因 -->
-            <div
-                v-if="song.status===2"
-                class="reject-box"
-            >
-                <el-icon>
-                    <Warning/>
-                </el-icon>
-                驳回原因：
-                {{song.auditReason || "暂无原因"}}
-            </div>
-        </div>
-    </div>
-    <!-- 歌词区域 -->
-    <div class="lyric-box">
-        <h2>
+      <div class="meta">
+        <div class="artist">{{ song.artist }}</div>
+        <div class="actions">
+          <span class="collect" @click="toggleCollect" style="cursor:pointer;">
             <el-icon>
-                <Document/>
+              <component :is="song.isCollected ? StarFilled : Star" />
             </el-icon>
-            歌词
-        </h2>
-        <div class="lyric-content">
-            <p
-                v-for="(line,index) in lyrics"
-                :key="index"
-            >
-                {{line}}
-            </p>
+            <span>{{ song.collectCount || 0 }}</span>
+          </span>
+          <a :href="song.url" :download="song.name" class="download" title="下载歌曲">
+            <el-icon><Download /></el-icon>
+          </a>
         </div>
+      </div>
+
+      <audio :src="song.url" controls class="player" />
+
+      <div class="lyrics">
+        <div v-if="!showAll">{{ shortLyrics }}</div>
+        <div v-else class="full-lyrics">{{ song.lyrics }}</div>
+        <el-button type="text" @click="showAll = !showAll">{{ showAll ? '收起歌词' : '展开全部歌词' }}</el-button>
+      </div>
+
+      <div class="comments">
+        <h3>评论（{{ song.commentCount || comments.length }}）</h3>
+        <div class="comment-list">
+          <div class="comment-item" v-for="c in comments" :key="c.id">
+            <div class="comment-user">{{ c.userName || c.userId || '匿名' }}</div>
+            <div class="comment-content">{{ c.content }}</div>
+            <div class="comment-time">{{ formatTime(c.createTime) }}</div>
+            <div class="comment-actions">
+              <el-button v-if="c.userId && c.userId==userId" size="mini" type="text" @click="removeComment(c.id)">删除</el-button>
+            </div>
+          </div>
+        </div>
+
+        <div class="comment-form">
+          <el-input type="textarea" v-model="newComment" :rows="3" placeholder="写下你的评论..." />
+          <div style="margin-top:8px;text-align:right;">
+            <el-button type="primary" @click="submitComment">发表评论</el-button>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 </template>
 
 <script setup>
-import {  ref,  onMounted} from "vue";
-import { useRoute} from "vue-router";
-import { getSongDetail} from "@/api/song";
-import { attachImageUrl} from "@/utils";
-import {VideoPlay, Star, Warning,Document} from "@element-plus/icons-vue";
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { getSongDetail, collectSong, getSongComments, addSongComment, deleteSongComment } from '@/api/song'
+import { attachImageUrl } from '@/utils'
+import { Star, StarFilled, Download } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/store/user'
 
-const route = useRoute();
-const song = ref({});
-// 歌词
-const lyrics = ref([]);
+const route = useRoute()
+const song = ref(null)
+const comments = ref([])
+const newComment = ref('')
+const showAll = ref(false)
+const userStore = useUserStore()
+const userId = computed(()=>userStore.userId)
+
 function getImage(path){
-    if(!path)
-        return "";
-    return attachImageUrl(path);
+  return attachImageUrl(path)
 }
+
 function formatTime(time){
-    if(!time)
-        return "";
-    return time.replace("T"," ");
+  if(!time) return ''
+  const d = new Date(time)
+  const now = new Date()
+  const diffMs = now - d
+  const oneHour = 1000 * 60 * 60
+  const oneDay = oneHour * 24
+  if (diffMs >= 0 && diffMs < oneDay) {
+      const hours = Math.floor(diffMs / oneHour)
+      if (hours >= 1) return `${hours}小时前`
+      const minutes = Math.floor(diffMs / (1000 * 60))
+      if (minutes >= 1) return `${minutes}分钟前`
+      return '刚刚'
+  }
+  const pad = (n)=>String(n).padStart(2,'0')
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
-function getStatusText(status){
-    switch(status){
-        case 1:
-            return "审核通过";
-        case 0:
-            return "待审核";
-        case 2:
-            return "审核未通过";
-        default:
-            return "未知状态";
-    }
-}
-function getStatusClass(status){
-    return {
-        success:status===1,
-        waiting:status===0,
-        failed:status===2
-    }
-}
-async function loadDetail(){
-    const id =
-        route.params.id;
-    const res =
-        await getSongDetail(id);
-    song.value =
-        res.data.data;
-    /*
-        假设后端返回:
 
-        lyric:
-        "第一句歌词\n第二句歌词"
+const shortLyrics = computed(()=>{
+  if(!song.value || !song.value.lyrics) return ''
+  const t = song.value.lyrics
+  return t.length>200 ? t.slice(0,200)+'...' : t
+})
 
-    */
-    if(song.value.lyric){
-        lyrics.value =
-            song.value.lyric.split("\n");
-    }
+async function loadData(){
+  const id = route.params.id
+  try{
+    const res = await getSongDetail(id)
+    song.value = res.data.data
+    if(song.value && song.value.isCollected===undefined) song.value.isCollected = false
+    await loadComments()
+  }catch(e){
+    song.value = null
+  }
 }
-onMounted(()=>{
-    loadDetail();
-});
+
+async function toggleCollect(){
+  if(!userId.value){ ElMessage.error('请先登录'); return }
+  try{
+    await collectSong({ userId: userId.value, songId: route.params.id })
+    if(!song.value) return
+    song.value.isCollected = !song.value.isCollected
+    ElMessage.success(song.value.isCollected ? '已收藏' : '已取消收藏')
+  }catch(e){ ElMessage.error('操作失败') }
+}
+
+async function loadComments(){
+  try{
+    const res = await getSongComments(route.params.id)
+    comments.value = res.data.data || []
+  }catch(e){ comments.value = [] }
+}
+
+async function submitComment(){
+  if(!newComment.value || !newComment.value.trim()){ ElMessage.error('评论内容不能为空'); return }
+  try{
+    await addSongComment({ songId: route.params.id, content: newComment.value })
+    ElMessage.success('评论已发布')
+    newComment.value = ''
+    await loadComments()
+    if(song.value) song.value.commentCount = comments.value.length
+  }catch(e){ ElMessage.error('评论失败') }
+}
+
+async function removeComment(id){
+  if(!userId.value){ ElMessage.error('请先登录'); return }
+  try{
+    await deleteSongComment(id, userId.value)
+    ElMessage.success('评论已删除')
+    await loadComments()
+    if(song.value) song.value.commentCount = comments.value.length
+  }catch(e){ ElMessage.error('删除失败') }
+}
+
+onMounted(()=>{ loadData() })
 </script>
 
 <style scoped>
-.song-detail-page{
-    padding:30px;
-}
-/* 顶部 */
-.song-header{
-    display:flex;
-    gap:40px;
-    background:white;
-    padding:30px;
-    border-radius:16px;
-    box-shadow:
-    0 5px 20px rgba(0,0,0,.08);
-}
-.cover-box{
-    width:260px;
-}
-.song-cover{
-    width:260px;
-    height:260px;
-    object-fit:cover;
-    border-radius:15px;
-}
-.song-info{
-    flex:1;
-}
-.song-info h1{
-    font-size:36px;
-    margin-bottom:20px;
-}
-.time{
-    color:#777;
-    margin-bottom:15px;
-}
-.statistics{
-    display:flex;
-    gap:40px;
-    margin:25px 0;
-}
-.stat-item{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    color:#666;
-    font-size:18px;
-}
-.stat-item .el-icon{
-    font-size:24px;
-}
-.audio{
-    width:500px;
-}
-/*审核*/
-.audit-status{
-    display:inline-block;
-    padding:6px 18px;
-    border-radius:20px;
-    margin-top:20px;
-}
-.success{
-    color:#16a34a;
-    background:#dcfce7;
-}
-.waiting{
-    color:#ca8a04;
-    background:#fef9c3;
-}
-.failed{
-    color:#dc2626;
-    background:#fee2e2;
-}
-.reject-box{
-    margin-top:20px;
-    padding:15px;
-    background:#fff1f2;
-    color:#dc2626;
-    border-radius:10px;
-}
-/*歌词*/
-.lyric-box{
-    margin-top:30px;
-    background:white;
-    border-radius:16px;
-    padding:30px;
-}
-.lyric-box h2{
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-.lyric-content{
-    margin-top:20px;
-    line-height:2;
-    color:#555;
-    font-size:18px;
-}
-
+.song-detail{ padding: 24px }
+.card{ background:#fff;border-radius:12px;padding:20px;box-shadow:0 6px 20px rgba(0,0,0,0.06) }
 .back{
-    cursor:pointer;
-    color:#666;
-    margin-bottom:20px;
+  cursor:pointer;
+  color:#666;
+  margin-bottom:12px;
 }
+.cover{ width:100%;max-width:560px;height:320px;object-fit:cover;border-radius:8px;margin:12px 0 }
+.meta{ display:flex;align-items:center;justify-content:space-between }
+.artist{ font-size:16px;color:#666 }
+.actions{ display:flex;gap:12px;align-items:center }
+.collect{ display:flex;align-items:center;gap:6px;color:#999 }
+.download .el-icon{ color:#444 }
+.lyrics{ margin-top:16px }
+.full-lyrics{ white-space:pre-wrap }
+.comments{ margin-top:20px }
+.comment-list{ display:flex;flex-direction:column;gap:12px;margin-top:12px }
+.comment-item{ padding:10px;background:#fafafa;border-radius:8px }
+.comment-user{ font-weight:600 }
+.comment-time{ color:#999;font-size:12px;margin-top:6px }
 </style>
