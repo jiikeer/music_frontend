@@ -14,10 +14,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { mockPosts } from '@/data/mockData'
 
 const router = useRouter()
-const likedPosts = ref(mockPosts.slice(0, 2))
+const likedPosts = ref([])
 </script>
 
 <style scoped>

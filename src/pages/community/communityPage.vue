@@ -38,10 +38,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Star, ChatDotRound } from '@element-plus/icons-vue'
-import { mockPosts } from '@/data/mockData'
 
 const router = useRouter()
-const posts = ref(mockPosts)
+const posts = ref([])
 
 function formatTime(iso) {
   if (!iso) return ''

@@ -65,10 +65,9 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { VideoPlay } from '@element-plus/icons-vue'
-import { mockSongs } from '@/data/mockData'
 
 const router = useRouter()
-const songs = ref(mockSongs)
+const songs = ref([])
 const pageSize = 35
 const currentPage = ref(1)
 

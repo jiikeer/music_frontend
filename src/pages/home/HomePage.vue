@@ -4,7 +4,7 @@
       <el-carousel :interval="4000" trigger="click" type="card" height="360px">
         <el-carousel-item v-for="song in carouselSongs" :key="song.id">
           <div class="carousel-card" @click="goSongDetail(song.id)">
-            <img :src="song.cover" alt="cover" class="carousel-image" />
+            <img :src="attachImageUrl(song.pic)" alt="cover" class="carousel-image" />
             <div class="carousel-info">
               <div class="carousel-name">{{ song.name }}</div>
               <div class="carousel-artist">{{ song.artist }}</div>
@@ -20,7 +20,7 @@
         <div class="hot-albums">
           <div class="album-card" v-for="song in hotSongs" :key="song.id" @click="goSongDetail(song.id)">
             <div class="cover-wrap">
-              <img :src="song.cover" alt="cover" class="cover" />
+              <img :src="attachImageUrl(song.pic)" alt="cover" class="cover" />
               <div class="badge-overlay">
                 <el-icon><Headset /></el-icon>
                 <span>{{ song.playCount }}</span>
@@ -55,20 +55,44 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { VideoPlay, Headset, Star, ChatDotRound } from '@element-plus/icons-vue'
-import { mockSongs, mockPosts } from '@/data/mockData'
+import { getHotSongList } from '@/api/song'
+import { attachImageUrl } from '@/utils'
 
 const router = useRouter()
-const songs = ref(mockSongs)
-const posts = ref(mockPosts)
-const hotSongs = computed(() => songs.value.slice(0, 16))
+const songs = ref([])
+const posts = ref([])
+const hotSongs = computed(() => songs.value.filter((s) => s.status === 1).slice(0, 16))
 const carouselSongs = computed(() => songs.value.slice(0, 5))
+
+async function loadHotSongs() {
+  try {
+    const res = await getHotSongList(5)
+    console.log("完整响应res:", res)
+    // 重点：业务数据在 res.data 内部！
+    const result = res.data;
+    if (result.code === 200 && Array.isArray(result.data)) {
+      songs.value = result.data
+      console.log("赋值成功，歌曲：", songs.value)
+      songs.value.forEach(item=>{
+        console.log("原始pic：", item.pic)
+        console.log("完整图片地址：", attachImageUrl(item.pic))
+      })
+    }
+  } catch (e) {
+    console.error('loadHotSongs error', e)
+  }
+}
 
 function goSongDetail(id) {
   router.push(`/song/detail/${id}`)
 }
+
+onMounted(() => {
+  loadHotSongs()
+})
 </script>
 
 <style scoped>

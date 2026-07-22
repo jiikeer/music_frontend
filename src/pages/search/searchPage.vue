@@ -15,18 +15,19 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { mockSongs, mockPosts } from '@/data/mockData'
 
 const route = useRoute()
 const router = useRouter()
+const songs = ref([])
+const posts = ref([])
 const keyword = computed(() => route.query.keyword || '')
 const filtered = computed(() => {
   const key = String(keyword.value).toLowerCase()
-  const songs = mockSongs.filter((item) => item.name.toLowerCase().includes(key))
-  const posts = mockPosts.filter((item) => item.title.toLowerCase().includes(key))
-  return [...songs, ...posts]
+  const matchedSongs = songs.value.filter((item) => item.name?.toLowerCase().includes(key))
+  const matchedPosts = posts.value.filter((item) => item.title?.toLowerCase().includes(key))
+  return [...matchedSongs, ...matchedPosts]
 })
 
 function goDetail(item) {

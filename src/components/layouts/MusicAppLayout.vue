@@ -23,9 +23,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import MusicHeader from './MusicHeader.vue'
-import { mockSongs } from '@/data/mockData'
 
-const currentSong = ref(mockSongs[0])
+const currentSong = ref(null)
 const router = useRouter()
 
 function goSongDetail(){

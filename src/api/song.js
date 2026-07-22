@@ -159,3 +159,17 @@ export function getSongComments(songId){
         }
     })
 }
+
+/**
+ * 获取热门歌曲（首页轮播）
+ * GET /song/hot?limit=5
+ */
+export function getHotSongList(limit = 5) {
+    return request({
+        url: "/song/hot",
+        method: "GET",
+        params: {
+            limit
+        }
+    })
+}
