@@ -225,10 +225,10 @@ async function loadWorks(){
 }
 // 跳转详情
 function viewPost(id) {
-  router.push(`/post/detail/${id}`)
+    router.push(`/user/post/detail/${id}`)
 }
 function viewSong(id) {
-  router.push(`/song/detail/${id}`)
+    router.push(`/user/song/detail/${id}`)
 }
 async function handleDeletePost(id){
     try{

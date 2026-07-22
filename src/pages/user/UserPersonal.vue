@@ -60,7 +60,6 @@ import { ElMessage, ElMessageBox } from "element-plus";
 
 // 引入标签对应子页面
 import UserPost from './UserPost.vue'
-import UserComment from './UserComment.vue'
 import UserFavorite from './UserFavorite.vue'
 import UserLike from './UserLike.vue'
 
@@ -83,7 +82,6 @@ const tabList = [
   { index: "1", label: "作品" },
   { index: "2", label: "收藏" },
   { index: "3", label: "点赞" },
-  { index: "4", label: "评论" },
 ];
 const activeTab = ref("1");
 
@@ -95,7 +93,6 @@ const currentComponent = computed(() => {
     case "1": return UserPost;
     case "2": return UserFavorite;
     case "3": return UserLike;
-    case "4": return UserComment;
     // 不返回 null，返回空组件
     default: return EmptyComp;
   }
