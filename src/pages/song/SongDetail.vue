@@ -2,34 +2,46 @@
   <div class="song-detail">
     <div class="card" v-if="song">
       <div class="back" @click="$router.back()">← 返回</div>
-      <h1>{{ song.name }}</h1>
-      <img :src="getImage(song.cover)" class="cover" />
-
-      <div class="meta">
-        <div class="artist">{{ song.artist }}</div>
-        <div class="actions">
-          <span class="collect" @click="toggleCollect" style="cursor:pointer;">
-            <el-icon>
-              <component :is="song.isCollected ? StarFilled : Star" />
-            </el-icon>
-            <span>{{ song.collectCount || 0 }}</span>
-          </span>
-          <a :href="song.url" :download="song.name" class="download" title="下载歌曲">
-            <el-icon><Download /></el-icon>
-          </a>
+      <div class="top-panel">
+        <img :src="getImage(song.cover)" class="cover" />
+        <div class="info-right">
+          <div class="title">{{ song.name }}</div>
+          <div class="basic-info">
+            <span>歌手：{{ song.artist }}</span>
+          </div>
+          <div class="button-row">
+            <span class="btn play" @click="togglePlay">
+              <el-icon><VideoPlay /></el-icon>
+              {{ playing ? '暂停' : '播放' }}
+            </span>
+            <span class="btn collect" @click="toggleCollect">
+              <el-icon><component :is="song.isCollected ? StarFilled : Star" /></el-icon>
+              收藏
+            </span>
+            <a class="btn download" :href="song.url" :download="song.name">
+              <el-icon><Download /></el-icon>
+              下载
+            </a>
+            <span class="btn count">评论：{{ song.commentCount || comments.length }}</span>
+          </div>
         </div>
       </div>
-
-      <audio :src="song.url" controls class="player" />
+      <audio ref="audioRef" :src="song.url" preload="metadata" @ended="onEnded" @play="playing = true" @pause="playing = false" style="display:none" />
 
       <div class="lyrics">
         <div v-if="!showAll">{{ shortLyrics }}</div>
-        <div v-else class="full-lyrics">{{ song.lyrics }}</div>
+        <div v-else class="full-lyrics">{{ lyricsText }}</div>
         <el-button type="text" @click="showAll = !showAll">{{ showAll ? '收起歌词' : '展开全部歌词' }}</el-button>
       </div>
 
       <div class="comments">
+          <div class="comment-form">
+          <el-input type="textarea" v-model="newComment" :rows="3" placeholder="写下你的评论..." />
+          <div style="margin-top:8px;text-align:right;">
+            <el-button type="primary" @click="submitComment">发表评论</el-button>
+          </div>
         <h3>评论（{{ song.commentCount || comments.length }}）</h3>
+        </div>
         <div class="comment-list">
           <div class="comment-item" v-for="c in comments" :key="c.id">
             <div class="comment-user">{{ c.userName || c.userId || '匿名' }}</div>
@@ -38,13 +50,6 @@
             <div class="comment-actions">
               <el-button v-if="c.userId && c.userId==userId" size="mini" type="text" @click="removeComment(c.id)">删除</el-button>
             </div>
-          </div>
-        </div>
-
-        <div class="comment-form">
-          <el-input type="textarea" v-model="newComment" :rows="3" placeholder="写下你的评论..." />
-          <div style="margin-top:8px;text-align:right;">
-            <el-button type="primary" @click="submitComment">发表评论</el-button>
           </div>
         </div>
       </div>
@@ -57,7 +62,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSongDetail, collectSong, getSongComments, addSongComment, deleteSongComment } from '@/api/song'
 import { attachImageUrl } from '@/utils'
-import { Star, StarFilled, Download } from '@element-plus/icons-vue'
+import { Star, StarFilled, Download, VideoPlay } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/user'
 
@@ -91,10 +96,15 @@ function formatTime(time){
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+const lyricsText = computed(()=>{
+  if(!song.value) return ''
+  return song.value.lyrics || song.value.lyric || ''
+})
+
 const shortLyrics = computed(()=>{
-  if(!song.value || !song.value.lyrics) return ''
-  const t = song.value.lyrics
-  return t.length>200 ? t.slice(0,200)+'...' : t
+  const text = lyricsText.value
+  if(!text) return ''
+  return text.length>200 ? text.slice(0,200)+'...' : text
 })
 
 async function loadData(){
@@ -158,13 +168,18 @@ onMounted(()=>{ loadData() })
   color:#666;
   margin-bottom:12px;
 }
-.cover{ width:100%;max-width:560px;height:320px;object-fit:cover;border-radius:8px;margin:12px 0 }
-.meta{ display:flex;align-items:center;justify-content:space-between }
-.artist{ font-size:16px;color:#666 }
-.actions{ display:flex;gap:12px;align-items:center }
-.collect{ display:flex;align-items:center;gap:6px;color:#999 }
-.download .el-icon{ color:#444 }
-.lyrics{ margin-top:16px }
+.top-panel{ display:flex; gap:24px; align-items:flex-start; margin-bottom:24px; }
+.cover{ width:180px; height:180px; border-radius:50%; object-fit:cover; border: 3px solid #eee; }
+.info-right{ flex:1; display:flex; flex-direction:column; gap:16px; }
+.title{ font-size:28px; font-weight:700; color:#111; }
+.basic-info{ display:flex; flex-wrap:wrap; gap:18px; color:#666; font-size:14px; }
+.button-row{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.btn{ display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:999px; border:1px solid #ccc; color:#333; cursor:pointer; background:#fff; transition:all .2s ease; }
+.btn:hover{ background:#f5f5f5; }
+.btn.download{ text-decoration:none; }
+.btn.count{ border-color:transparent; color:#999; cursor:default; }
+.lyrics{ margin-top:16px; line-height:2; color:#444; }
+.full-lyrics{ white-space:pre-wrap; }
 .full-lyrics{ white-space:pre-wrap }
 .comments{ margin-top:20px }
 .comment-list{ display:flex;flex-direction:column;gap:12px;margin-top:12px }

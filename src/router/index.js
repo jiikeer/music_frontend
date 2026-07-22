@@ -40,6 +40,16 @@ const routes = [
         name:'sign-up',
         component: () => import('@/pages/signUp/signUp.vue')
       },
+      {
+        path:"/post/detail/:id",
+        name:"PostDetail",
+        component:()=>import("@/pages/post/PostDetail.vue")
+      },
+      {
+          path:"/song/detail/:id",
+          name:"SongDetail",
+          component:()=>import("@/pages/song/SongDetail.vue")
+      },
     ]
   },
   {
@@ -56,22 +66,12 @@ const routes = [
     },
     component: () => import("@/pages/user/UserSetting.vue"),
   },
-  {
-    path:"/post/detail/:id",
-    name:"PostDetail",
-    component:()=>import("@/pages/post/PostDetail.vue")
-  },
+
   {
     path: "/user/post/detail/:id",
     name: "UserPostDetail",
     component: () => import('@/pages/user/UserPostDetail.vue')
   },
-  {
-      path:"/song/detail/:id",
-      name:"SongDetail",
-      component:()=>import("@/pages/song/SongDetail.vue")
-  }
-  ,
   {
     path: "/user/song/detail/:id",
     name: "UserSongDetail",

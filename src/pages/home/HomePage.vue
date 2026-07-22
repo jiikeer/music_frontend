@@ -3,7 +3,7 @@
     <section class="carousel-section">
       <el-carousel :interval="4000" trigger="click" type="card" height="360px">
         <el-carousel-item v-for="song in carouselSongs" :key="song.id">
-          <div class="carousel-card" @click="playSong(song)">
+          <div class="carousel-card" @click="goSongDetail(song.id)">
             <img :src="song.cover" alt="cover" class="carousel-image" />
             <div class="carousel-info">
               <div class="carousel-name">{{ song.name }}</div>
@@ -18,7 +18,7 @@
       <div class="panel-song">
         <div class="panel-title">热门歌曲</div>
         <div class="hot-albums">
-          <div class="album-card" v-for="song in hotSongs" :key="song.id" @click="playSong(song)">
+          <div class="album-card" v-for="song in hotSongs" :key="song.id" @click="goSongDetail(song.id)">
             <div class="cover-wrap">
               <img :src="song.cover" alt="cover" class="cover" />
               <div class="badge-overlay">
@@ -66,9 +66,8 @@ const posts = ref(mockPosts)
 const hotSongs = computed(() => songs.value.slice(0, 16))
 const carouselSongs = computed(() => songs.value.slice(0, 5))
 
-function playSong(song) {
-  const event = new CustomEvent('play-song', { detail: song })
-  window.dispatchEvent(event)
+function goSongDetail(id) {
+  router.push(`/song/detail/${id}`)
 }
 </script>
 

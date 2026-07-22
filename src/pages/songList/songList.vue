@@ -7,7 +7,7 @@
         class="album-item"
         v-for="song in hotSongs"
         :key="song.id"
-        @click="playSong(song)"
+        @click="playAndGoDetail(song)"
         title="点击播放"
       >
         <div class="cover-wrap">
@@ -31,7 +31,7 @@
         class="album-item"
         v-for="song in pagedSongs"
         :key="song.id"
-        @click="playSong(song)"
+        @click="playAndGoDetail(song)"
         title="点击播放"
       >
         <div class="cover-wrap">
@@ -63,9 +63,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { VideoPlay } from '@element-plus/icons-vue'
 import { mockSongs } from '@/data/mockData'
 
+const router = useRouter()
 const songs = ref(mockSongs)
 const pageSize = 35
 const currentPage = ref(1)
@@ -79,6 +81,11 @@ const pagedSongs = computed(() => {
 function playSong(song) {
   // 通知全局播放器播放此曲
   window.dispatchEvent(new CustomEvent('play-song', { detail: song }))
+}
+
+function playAndGoDetail(song) {
+  playSong(song)
+  router.push(`/song/detail/${song.id}`)
 }
 
 function handlePageChange(page) {
