@@ -6,6 +6,12 @@ import router from './router'
 import pinia from './store'
 
 const app = createApp(App)
+
+// 消除 ResizeObserver 的 harmless 报错
+app.config.errorHandler = (err) => {
+  if (err?.message?.includes('ResizeObserver loop')) return
+  console.error(err)
+}
 app.use(ElementPlus)
 app.use(router)
 app.use(pinia)

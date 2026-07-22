@@ -1,187 +1,62 @@
-import request from "@/utils/request";
-// ====================== 帖子 ======================
-/**
- * 发布帖子
- *
- * POST /post/publish
- *
- * 类型:
- * multipart/form-data
- *
- * 参数:
- * userId
- * title
- * content
- * coverFile
- */
-export function publishPost(data){
-    return request({
-        url:"/post/publish",
-        method:"POST",
-        headers:{
-            "Content-Type":
-            "multipart/form-data"
-        },
-        data
-    })
-}
-/**
- * 修改帖子
- *
- * POST /post/update
- *
- * 参数:
- * id
- * title
- * content
- * coverFile
- */
-export function updatePost(data){
-    return request({
-        url:"/post/update",
-        method:"POST",
-        headers:{
-            "Content-Type":
-            "multipart/form-data"
-        },
-        data
-    })
-}
-/**
- * 删除帖子
- *
- * DELETE /post/delete
- *
- * 参数:
- * postId
- * loginUserId
- */
-export function deletePost(
-    postId,
-    loginUserId
-){
-    return request({
-        url:"/post/delete",
-        method:"DELETE",
-        params:{
-            postId,
-            loginUserId
-        }
-    })
-}
-/**
- * 帖子详情
- *
- * GET /post/detail?postId=
- */
-export function getPostDetail(postId){
-    return request({
-        url:"/post/detail",
-        method:"GET",
-        params:{
-            postId
-        }
-    })
-}
-/**
- * 帖子分页
- *
- * GET /post/page?page=1&size=20
- */
-export function getPostPage(
-    page=1,
-    size=20
-){
-    return request({
-        url:"/post/page",
-        method:"GET",
-        params:{
-            page,
-            size
-        }
-    })
-}
-/**
- * 查询用户帖子
- *
- * GET /post/user/list?userId=
- */
-export function getUserPosts(userId){
-    return request({
-        url:"/post/user/list",
-        method:"GET",
-        params:{
-            userId
-        }
-    })
-}
-// ====================== 点赞 ======================
-/**
- * 点赞/取消点赞
- *
- * POST /post/like
- *
- * JSON:
- *
- * {
- *   userId,
- *   postId
- * }
- */
-export function likePost(data){
-    return request({
-        url:"/post/like",
-        method:"POST",
-        data
-    })
-}
-// ====================== 评论 ======================
-/**
- * 添加帖子评论
- *
- * POST /post/comment/add
- */
-export function addPostComment(data){
-    return request({
-        url:"/post/comment/add",
-        method:"POST",
-        data
-    })
-}
-/**
- * 删除帖子评论
- *
- * DELETE /post/comment/delete
- *
- * 参数:
- * commentId
- * userId
- */
-export function deletePostComment(
-    commentId,
-    userId
-){
-    return request({
-        url:"/post/comment/delete",
-        method:"DELETE",
-        params:{
-            commentId,
-            userId
-        }
-    })
-}
-/**
- * 查询帖子评论
- *
- * GET /post/comment/list?postId=
- */
-export function getPostComments(postId){
-    return request({
-        url:"/post/comment/list",
-        method:"GET",
-        params:{
-            postId
-        }
-    })
+import { api } from '@/utils/request'
 
+export function publishPost(data) {
+  return api({
+    method: 'post',
+    url: '/post/publish',
+    data,
+    config: { headers: { 'Content-Type': 'multipart/form-data' } }
+  })
+}
+
+export function updatePost(data) {
+  return api({
+    method: 'post',
+    url: '/post/update',
+    data,
+    config: { headers: { 'Content-Type': 'multipart/form-data' } }
+  })
+}
+
+export function deletePost(postId, loginUserId) {
+  return api({ method: 'delete', url: `/post/delete?postId=${postId}&loginUserId=${loginUserId}` })
+}
+
+export function getPostDetail(postId) {
+  return api({ url: `/post/detail?postId=${postId}` })
+}
+
+export function getPostPage(page = 1, size = 10) {
+  return api({ url: `/post/page?page=${page}&size=${size}` })
+}
+
+// admin 用
+export function getUserPostList(userId) {
+  return api({ url: `/post/user/list?userId=${userId}` })
+}
+
+// master 用户页面用（兼容旧函数名）
+export function getUserPosts(userId) {
+  return getUserPostList(userId)
+}
+
+export function likePost(data) {
+  return api({ method: 'post', url: '/post/like', data })
+}
+
+export function addPostComment(data) {
+  return api({ method: 'post', url: '/post/comment/add', data })
+}
+
+export function deletePostComment(commentId, userId) {
+  return api({ method: 'delete', url: `/post/comment/delete?commentId=${commentId}&userId=${userId}` })
+}
+
+export function getPostCommentList(postId) {
+  return api({ url: `/post/comment/list?postId=${postId}` })
+}
+
+// 兼容 master 旧函数名
+export function getPostComments(postId) {
+  return getPostCommentList(postId)
 }

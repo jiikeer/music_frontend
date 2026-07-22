@@ -4,7 +4,7 @@ import router from "@/router";
 const BASE_URL =
 process.env.VUE_APP_NODE_HOST ||
 process.env.NODE_HOST ||
-"http://localhost:8081";
+"";
 
 const request = axios.create({
     baseURL:BASE_URL,
