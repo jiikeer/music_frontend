@@ -62,7 +62,6 @@ export function getUserDetail(id){
 // =====================
 export function deleteUser(id){
     return api({
-        method:"delete",
         url:`/user/delete?id=${id}`
     });
 }
@@ -105,12 +104,6 @@ export function uploadAvatar(id,file){
     return api({
         method:"post",
         url:`/user/avatar/update?id=${id}`,
-        data:formData,
-        config:{
-            headers:{
-                "Content-Type":
-                "multipart/form-data"
-            }
-        }
+        data:formData
     });
 }

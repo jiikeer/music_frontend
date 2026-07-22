@@ -49,14 +49,20 @@ async function handleLogin(){
         ElMessage.error("请输入账号密码");
         return;
     }
-    const res = await apiLogin(form);
-    console.log(res);
-    if(res.success){
-        userStore.login(res.data);
-        ElMessage.success("登录成功");
-        router.push("/");
-    }else{
-        ElMessage.error(res.message);
+
+    try {
+        const res = await apiLogin(form);
+        console.log(res);
+        if(res.success){
+            const isAdmin = form.username === 'admin';
+            userStore.login({ ...res.data, role: isAdmin ? 'admin' : 'user' });
+            ElMessage.success(isAdmin ? "管理员登录成功" : "登录成功");
+            router.push(isAdmin ? "/admin" : "/");
+        }else{
+            ElMessage.error(res.message || "账号或密码错误");
+        }
+    } catch (e) {
+        ElMessage.error("登录失败，请检查网络");
     }
 }
 

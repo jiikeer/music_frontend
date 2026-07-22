@@ -9,9 +9,6 @@ export function uploadSong(data){
     return request({
         url:"/song/upload",
         method:"POST",
-        headers:{
-            "Content-Type":"multipart/form-data"
-        },
         data
     })
 }
@@ -25,9 +22,6 @@ export function updateSong(data){
     return request({
         url:"/song/update",
         method:"POST",
-        headers:{
-            "Content-Type":"multipart/form-data"
-        },
         data
     })
 }
@@ -86,15 +80,7 @@ export function getSongDetail(id){
  * }
  */
 export function collectSong(data){
-
-    return request({
-
-        url:"/song/collect",
-
-        method:"POST",
-
-        data
-    })
+    return request.post("/song/collect", data)
 }
 /**
  * 查询用户收藏歌曲
@@ -102,13 +88,7 @@ export function collectSong(data){
  * GET /song/collect/list?userId=xx
  */
 export function getUserCollect(userId){
-    return request({
-        url:"/song/collect/list",
-        method:"GET",
-        params:{
-            userId
-        }
-    })
+    return request.get("/song/collect/list", { params: { userId } }).then(res => res.data || res)
 }
 // ==================== 评论 ====================
 /**
@@ -117,11 +97,7 @@ export function getUserCollect(userId){
  * POST /song/comment/add
  */
 export function addSongComment(data){
-    return request({
-        url:"/song/comment/add",
-        method:"POST",
-        data
-    })
+    return request.post("/song/comment/add", data)
 }
 /**
  * 删除歌曲评论

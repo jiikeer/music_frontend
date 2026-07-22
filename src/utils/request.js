@@ -4,16 +4,12 @@ import router from "@/router";
 const BASE_URL =
 process.env.VUE_APP_NODE_HOST ||
 process.env.NODE_HOST ||
-"http://localhost:8081";
+"";
 
 const request = axios.create({
     baseURL:BASE_URL,
-    timeout:5000,
-    withCredentials:true,
-    headers:{
-        "Content-Type":
-        "application/json;charset=UTF-8"
-    }
+    timeout:500000,
+    withCredentials:true
 });
 // 请求拦截器
 request.interceptors.request.use(

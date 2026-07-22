@@ -18,10 +18,11 @@
     </section>
     <section class="panel">
       <div class="panel-title">热门帖子</div>
-      <div class="post-card" v-for="post in posts" :key="post.id">
+      <div class="post-card" v-for="post in hotPosts" :key="post.id">
         <div class="post-content">
           <h3 class="post-title" @click="router.push(`/post/detail/${post.id}`)">{{ post.title }}</h3>
           <p>{{ post.content }}</p>
+          <div class="post-time">{{ formatTime(post.createTime) }}</div>
           <div class="post-meta">
             <el-icon><Star /></el-icon>
             <span>{{ post.likeCount }}</span>
@@ -35,12 +36,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Star, ChatDotRound } from '@element-plus/icons-vue'
+import { getPostPage } from '@/api/post'
 
 const router = useRouter()
 const posts = ref([])
+
+async function loadPosts() {
+  try {
+    const res = await getPostPage(1, 20)
+    console.log('帖子响应:', res)
+    const result = res.data
+    if (result.code === 200) {
+      const list = Array.isArray(result.data?.records)
+        ? result.data.records
+        : Array.isArray(result.data)
+          ? result.data
+          : []
+      posts.value = list
+    }
+  } catch (e) {
+    console.error('加载帖子失败:', e)
+  }
+}
+
+const hotPosts = computed(() => {
+  return [...posts.value].sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0))
+})
+
+onMounted(() => {
+  loadPosts()
+})
 
 function formatTime(iso) {
   if (!iso) return ''

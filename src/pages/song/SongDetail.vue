@@ -3,11 +3,14 @@
     <div class="card" v-if="song">
       <div class="back" @click="$router.back()">← 返回</div>
       <div class="top-panel">
-        <img :src="getImage(song.cover)" class="cover" />
+        <img :src="getImage(song.pic)" class="cover" />
         <div class="info-right">
           <div class="title">{{ song.name }}</div>
           <div class="basic-info">
-            <span>歌手：{{ song.artist }}</span>
+            <span class="artist-link" @click="goArtist(song.singerId)" v-if="song.singerId">
+              歌手：{{ song.singerName || song.introduction || song.artist }}
+            </span>
+            <span v-else>歌手：{{ song.singerName || song.introduction || song.artist }}</span>
           </div>
           <div class="button-row">
             <span class="btn play" @click="togglePlay">
@@ -26,7 +29,7 @@
           </div>
         </div>
       </div>
-      <audio ref="audioRef" :src="song.url" preload="metadata" @ended="onEnded" @play="playing = true" @pause="playing = false" style="display:none" />
+      <audio ref="audioRef" :src="getSourceUrl()" preload="metadata" @ended="onEnded" @play="playing = true" @pause="playing = false" style="display:none" />
 
       <div class="lyrics">
         <div v-if="!showAll">{{ shortLyrics }}</div>
@@ -44,7 +47,7 @@
         </div>
         <div class="comment-list">
           <div class="comment-item" v-for="c in comments" :key="c.id">
-            <div class="comment-user">{{ c.userName || c.userId || '匿名' }}</div>
+            <div class="comment-user">{{ c.username || c.userId || '匿名' }}</div>
             <div class="comment-content">{{ c.content }}</div>
             <div class="comment-time">{{ formatTime(c.createTime) }}</div>
             <div class="comment-actions">
@@ -59,7 +62,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getSongDetail, collectSong, getSongComments, addSongComment, deleteSongComment } from '@/api/song'
 import { attachImageUrl } from '@/utils'
 import { Star, StarFilled, Download, VideoPlay } from '@element-plus/icons-vue'
@@ -67,7 +70,9 @@ import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/user'
 
 const route = useRoute()
+const router = useRouter()
 const song = ref(null)
+const playing = ref(false)
 const comments = ref([])
 const newComment = ref('')
 const showAll = ref(false)
@@ -76,6 +81,40 @@ const userId = computed(()=>userStore.userId)
 
 function getImage(path){
   return attachImageUrl(path)
+}
+
+function getSourceUrl(){
+  // 加时间戳避免浏览器缓存导致无法播放
+  if(!song.value?.url) return ''
+  const separator = song.value.url.includes('?') ? '&' : '?'
+  return song.value.url + separator + '_t=' + Date.now()
+}
+
+function goArtist(artistId) {
+  if (artistId) router.push(`/artist/${artistId}`)
+}
+
+function togglePlay(){
+  if(!song.value?.url) return
+  if(playing.value){
+    // 暂停：通知底部播放栏
+    window.dispatchEvent(new CustomEvent('play-song', { detail: null }))
+    playing.value = false
+  }else{
+    // 播放：通知底部播放栏
+    window.dispatchEvent(new CustomEvent('play-song', { detail: {
+      id: song.value.id,
+      name: song.value.name,
+      artist: song.value.introduction || song.value.artist,
+      cover: getImage(song.value.pic),
+      url: getSourceUrl()
+    }}))
+    playing.value = true
+  }
+}
+
+function onEnded(){
+  playing.value = false
 }
 
 function formatTime(time){
@@ -98,7 +137,7 @@ function formatTime(time){
 
 const lyricsText = computed(()=>{
   if(!song.value) return ''
-  return song.value.lyrics || song.value.lyric || ''
+  return song.value.lyric || song.value.lyrics || ''
 })
 
 const shortLyrics = computed(()=>{
@@ -139,12 +178,16 @@ async function loadComments(){
 async function submitComment(){
   if(!newComment.value || !newComment.value.trim()){ ElMessage.error('评论内容不能为空'); return }
   try{
-    await addSongComment({ songId: route.params.id, content: newComment.value })
+    if(!userId.value){ ElMessage.error('请先登录'); return }
+    await addSongComment({ targetId: Number(route.params.id), userId: Number(userId.value), content: newComment.value.trim() })
     ElMessage.success('评论已发布')
     newComment.value = ''
     await loadComments()
     if(song.value) song.value.commentCount = comments.value.length
-  }catch(e){ ElMessage.error('评论失败') }
+  }catch(e){
+    console.error('评论提交失败:', e)
+    ElMessage.error('评论失败：' + (e.response?.data?.message || e.message || '未知错误'))
+  }
 }
 
 async function removeComment(id){
@@ -174,6 +217,13 @@ onMounted(()=>{ loadData() })
 .title{ font-size:28px; font-weight:700; color:#111; }
 .basic-info{ display:flex; flex-wrap:wrap; gap:18px; color:#666; font-size:14px; }
 .button-row{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.artist-link {
+  cursor: pointer;
+  color: #409EFF;
+}
+.artist-link:hover {
+  text-decoration: underline;
+}
 .btn{ display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:999px; border:1px solid #ccc; color:#333; cursor:pointer; background:#fff; transition:all .2s ease; }
 .btn:hover{ background:#f5f5f5; }
 .btn.download{ text-decoration:none; }

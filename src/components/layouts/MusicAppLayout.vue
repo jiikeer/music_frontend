@@ -6,37 +6,43 @@
     <main class="app-main">
       <router-view />
     </main>
-    <footer class="player-bar" v-if="currentSong">
-      <div class="player-info">
-        <img :src="currentSong.cover" alt="cover" class="player-cover" @click="goSongDetail" style="cursor:pointer;" />
-        <div>
-          <div class="player-name">{{ currentSong.name }}</div>
-          <div class="player-artist">{{ currentSong.artist }}</div>
+    <footer class="player-bar">
+      <template v-if="currentSong">
+        <div class="player-info">
+          <img :src="currentSong.cover" alt="cover" class="player-cover" @click="showPlayerDetail = true" style="cursor:pointer;" />
+          <div>
+            <div class="player-name">{{ currentSong.name }}</div>
+            <div class="player-artist">{{ currentSong.artist }}</div>
+          </div>
         </div>
-      </div>
-      <audio :src="currentSong.url" controls autoplay class="player-audio" />
+        <audio :src="currentSong.url" controls autoplay class="player-audio" />
+      </template>
+      <div v-else class="player-empty">当前没有播放歌曲</div>
     </footer>
+
+    <PlayerDetail
+      :visible="showPlayerDetail"
+      :song="currentSong || {}"
+      @close="showPlayerDetail = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import MusicHeader from './MusicHeader.vue'
+import PlayerDetail from '@/components/PlayerDetail.vue'
 
 const currentSong = ref(null)
-const router = useRouter()
-
-function goSongDetail(){
-  if(currentSong.value && currentSong.value.id){
-    router.push(`/song/detail/${currentSong.value.id}`)
-  }
-}
+const showPlayerDetail = ref(false)
 
 window.addEventListener('play-song', (event) => {
   const song = event.detail
   if (song) {
     currentSong.value = song
+  } else {
+    // detail 为 null 表示暂停，清空当前歌曲
+    currentSong.value = null
   }
 })
 </script>
@@ -53,7 +59,7 @@ window.addEventListener('play-song', (event) => {
   z-index: 20;
 }
 .app-main {
-  padding: 24px;
+  padding: 24px 0;
   padding-bottom: 100px;
 }
 .player-bar {
@@ -92,9 +98,15 @@ window.addEventListener('play-song', (event) => {
 .player-audio {
   width:80%
 }
+.player-empty {
+  width: 100%;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
 @media (max-width: 768px) {
   .app-main {
-    padding: 16px;
+    padding: 16px 0;
     padding-bottom: 140px;
   }
   .player-bar {

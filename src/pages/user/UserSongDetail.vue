@@ -3,10 +3,10 @@
     <div class="card" v-if="song">
       <div class="back" @click="$router.back()">← 返回</div>
       <h1>{{ song.name }}</h1>
-      <img :src="getImage(song.cover)" class="cover" />
+      <img :src="getImage(song.pic || song.cover)" class="cover" />
 
       <div class="meta">
-        <div class="artist">{{ song.artist }}</div>
+        <div class="artist">{{ song.introduction || song.artist }}</div>
         <div class="actions">
           <a :href="song.url" :download="song.name" class="download" title="下载歌曲">
             <el-icon><i class="el-icon-download" /></el-icon>
@@ -18,7 +18,7 @@
 
       <div class="lyrics">
         <div v-if="!showAll">{{ shortLyrics }}</div>
-        <div v-else class="full-lyrics">{{ song.lyrics }}</div>
+        <div v-else class="full-lyrics">{{ song.lyric }}</div>
         <el-button type="text" @click="showAll = !showAll">{{ showAll ? '收起歌词' : '展开全部歌词' }}</el-button>
       </div>
 
@@ -44,8 +44,8 @@ const showAll = ref(false)
 function getImage(path){ return attachImageUrl(path) }
 
 const shortLyrics = computed(()=>{
-  if(!song.value || !song.value.lyrics) return ''
-  const t = song.value.lyrics
+  if(!song.value || !song.value.lyric) return ''
+  const t = song.value.lyric
   return t.length>200 ? t.slice(0,200)+'...' : t
 })
 

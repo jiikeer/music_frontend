@@ -18,10 +18,6 @@ export function publishPost(data){
     return request({
         url:"/post/publish",
         method:"POST",
-        headers:{
-            "Content-Type":
-            "multipart/form-data"
-        },
         data
     })
 }
@@ -40,10 +36,6 @@ export function updatePost(data){
     return request({
         url:"/post/update",
         method:"POST",
-        headers:{
-            "Content-Type":
-            "multipart/form-data"
-        },
         data
     })
 }

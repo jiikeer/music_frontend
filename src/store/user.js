@@ -12,7 +12,8 @@ export const useUserStore = defineStore(
         email: localStorage.getItem("email") || "",
         introduction: localStorage.getItem("introduction") || "",
         birth: localStorage.getItem("birth") || "",
-        phoneNum: localStorage.getItem("phoneNum") || ""
+        phoneNum: localStorage.getItem("phoneNum") || "",
+        role: localStorage.getItem("role") || ""
     }),
 
     actions:{
@@ -26,6 +27,7 @@ export const useUserStore = defineStore(
             this.introduction = user.introduction || "";
             this.birth = user.birth || "";
             this.phoneNum = user.phoneNum || "";
+            this.role = user.role || "user";
 
             localStorage.setItem("userId", user.id);
             localStorage.setItem("username", user.username);
@@ -36,6 +38,7 @@ export const useUserStore = defineStore(
             localStorage.setItem("birth", user.birth || "");
             localStorage.setItem("phoneNum", user.phoneNum || "");
             localStorage.setItem("token", "login");
+            localStorage.setItem("role", this.role);
             this.token = "login";
         },
 
@@ -50,6 +53,7 @@ export const useUserStore = defineStore(
             this.introduction = "";
             this.birth = "";
             this.phoneNum = "";
+            this.role = "";
 
             localStorage.removeItem("userId");
             localStorage.removeItem("username");
@@ -60,6 +64,7 @@ export const useUserStore = defineStore(
             localStorage.removeItem("introduction");
             localStorage.removeItem("birth");
             localStorage.removeItem("phoneNum");
+            localStorage.removeItem("role");
         },
         initUser(){
             this.userId = localStorage.getItem("userId") || "";
@@ -71,6 +76,7 @@ export const useUserStore = defineStore(
             this.introduction = localStorage.getItem("introduction") || "";
             this.birth = localStorage.getItem("birth") || "";
             this.phoneNum = localStorage.getItem("phoneNum") || "";
+            this.role = localStorage.getItem("role") || "";
         },
 
         setAvatar(newAvatarUrl){
@@ -108,6 +114,9 @@ export const useUserStore = defineStore(
     getters:{
         isLogin(state){
             return !!state.token;
+        },
+        isAdmin(state){
+            return state.role === 'admin';
         }
     }
 });

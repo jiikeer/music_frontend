@@ -152,15 +152,15 @@ function goMenu(path) {
   font-size: 13px;
 }
 :deep(.el-dropdown-menu) {
-  background: #111;
-  border: 1px solid #333;
+  background: #fff;
+  border: 1px solid #eee;
 }
 :deep(.el-dropdown-menu__item) {
-  color: #f5f5f5;
+  color: #111;
 }
 :deep(.el-dropdown-menu__item:hover) {
-  background: #222 !important;
-  color: #fff !important;
+  background: #f5f5f5 !important;
+  color: #111 !important;
 }
 @media (max-width: 900px) {
   .music-header {

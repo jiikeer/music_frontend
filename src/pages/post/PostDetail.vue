@@ -51,7 +51,7 @@
             <h3>评论（{{ post.commentCount || comments.length }}）</h3>
             <div class="comment-list">
                 <div class="comment-item" v-for="c in comments" :key="c.id">
-                    <div class="comment-user">{{ c.userName || c.userId || '匿名' }}</div>
+                    <div class="comment-user">{{ c.username || c.userId || '匿名' }}</div>
                     <div class="comment-content">{{ c.content }}</div>
                     <div class="comment-time">{{ formatTime(c.createTime) }}</div>
                     <div class="comment-actions">
@@ -170,8 +170,10 @@ async function submitComment(){
         ElMessage.error('评论内容不能为空')
         return
     }
+    if(!userId.value){ ElMessage.error('请先登录'); return }
     const payload = {
-        postId: route.params.id,
+        targetId: Number(route.params.id),
+        userId: Number(userId.value),
         content: newComment.value
     }
     try{
@@ -194,8 +196,10 @@ async function submitReply(commentId){
         ElMessage.error('回复内容不能为空')
         return
     }
+    if(!userId.value){ ElMessage.error('请先登录'); return }
     const payload = {
-        postId: route.params.id,
+        targetId: Number(route.params.id),
+        userId: Number(userId.value),
         content: text,
         parentId: commentId
     }

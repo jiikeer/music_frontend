@@ -11,14 +11,14 @@
         title="点击播放"
       >
         <div class="cover-wrap">
-          <img :src="song.cover" alt="cover" class="cover" />
+          <img :src="attachImageUrl(song.pic || song.cover)" alt="cover" class="cover" />
           <div class="hover-overlay">
             <el-icon><VideoPlay /></el-icon>
           </div>
         </div>
         <div class="meta">
           <div class="title">{{ song.name }}</div>
-          <div class="artist">{{ song.artist }}</div>
+          <div class="artist">{{ song.introduction || song.artist }}</div>
         </div>
       </div>
     </div>
@@ -35,14 +35,14 @@
         title="点击播放"
       >
         <div class="cover-wrap">
-          <img :src="song.cover" alt="cover" class="cover" />
+          <img :src="attachImageUrl(song.pic || song.cover)" alt="cover" class="cover" />
           <div class="hover-overlay">
             <el-icon><VideoPlay /></el-icon>
           </div>
         </div>
         <div class="meta">
           <div class="title">{{ song.name }}</div>
-          <div class="artist">{{ song.artist }}</div>
+          <div class="artist">{{ song.introduction || song.artist }}</div>
         </div>
       </div>
     </div>
@@ -62,9 +62,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { VideoPlay } from '@element-plus/icons-vue'
+import { getAdminSongPage } from '@/api/admin'
+import { attachImageUrl } from '@/utils'
 
 const router = useRouter()
 const songs = ref([])
@@ -75,6 +77,25 @@ const hotSongs = computed(() => songs.value.filter((song) => song.status === 1).
 const pagedSongs = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return songs.value.slice(start, start + pageSize)
+})
+
+onMounted(async () => {
+  try {
+    const res = await getAdminSongPage(1, 200, 1)
+    const raw = res?.data ?? res ?? {}
+    const list = Array.isArray(raw.records) ? raw.records : Array.isArray(raw.list) ? raw.list : Array.isArray(raw) ? raw : []
+    songs.value = list.map(item => ({
+      id: item.id,
+      name: item.name,
+      artist: item.introduction || item.username || '未知歌手',
+      pic: item.pic || item.cover || '',
+      cover: item.pic || item.cover || '',
+      url: item.url || '',
+      status: item.status
+    }))
+  } catch (e) {
+    console.error('获取歌曲列表失败:', e)
+  }
 })
 
 function playSong(song) {

@@ -7,7 +7,7 @@
             <img :src="attachImageUrl(song.pic)" alt="cover" class="carousel-image" />
             <div class="carousel-info">
               <div class="carousel-name">{{ song.name }}</div>
-              <div class="carousel-artist">{{ song.artist }}</div>
+              <div class="carousel-artist">{{ song.introduction || song.artist }}</div>
             </div>
           </div>
         </el-carousel-item>
@@ -31,16 +31,17 @@
             </div>
             <div class="meta">
               <div class="title">{{ song.name }}</div>
-              <div class="artist">{{ song.artist }}</div>
+              <div class="artist">{{ song.introduction || song.artist }}</div>
             </div>
           </div>
         </div>
       </div>
       <div class="panel">
         <div class="panel-title">热门帖子</div>
-        <div class="list-card" v-for="post in posts" :key="post.id">
-          <div>
-            <div class="item-title" @click="router.push(`/post/detail/${post.id}`)">{{ post.title }}</div>
+        <div class="list-card" v-for="post in posts" :key="post.id" @click="router.push(`/post/detail/${post.id}`)">
+          <img v-if="post.cover" :src="attachImageUrl(post.cover)" class="post-cover" />
+          <div class="post-text">
+            <div class="item-title">{{ post.title }}</div>
             <div class="item-sub">
               <el-icon><Star /></el-icon>
               <span>{{ post.likeCount }}</span>
@@ -59,6 +60,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { VideoPlay, Headset, Star, ChatDotRound } from '@element-plus/icons-vue'
 import { getHotSongList } from '@/api/song'
+import { getPostPage } from '@/api/post'
 import { attachImageUrl } from '@/utils'
 
 const router = useRouter()
@@ -71,18 +73,32 @@ async function loadHotSongs() {
   try {
     const res = await getHotSongList(5)
     console.log("完整响应res:", res)
-    // 重点：业务数据在 res.data 内部！
     const result = res.data;
     if (result.code === 200 && Array.isArray(result.data)) {
-      songs.value = result.data
-      console.log("赋值成功，歌曲：", songs.value)
-      songs.value.forEach(item=>{
-        console.log("原始pic：", item.pic)
-        console.log("完整图片地址：", attachImageUrl(item.pic))
-      })
+      songs.value = result.data.map(item => ({
+        ...item,
+        pic: item.pic || item.cover || ''
+      }))
     }
   } catch (e) {
     console.error('loadHotSongs error', e)
+  }
+}
+
+async function loadHotPosts() {
+  try {
+    const res = await getPostPage(1, 10)
+    const result = res.data
+    if (result.code === 200) {
+      const list = Array.isArray(result.data?.records)
+        ? result.data.records
+        : Array.isArray(result.data)
+          ? result.data
+          : []
+      posts.value = list
+    }
+  } catch (e) {
+    console.error('loadHotPosts error', e)
   }
 }
 
@@ -92,6 +108,7 @@ function goSongDetail(id) {
 
 onMounted(() => {
   loadHotSongs()
+  loadHotPosts()
 })
 </script>
 
@@ -99,13 +116,11 @@ onMounted(() => {
 .home-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
 }
 .carousel-section {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
   padding: 0 20px;
+  margin-bottom: 16px;
 }
 .carousel-title {
   font-size: 20px;
@@ -182,21 +197,26 @@ onMounted(() => {
 }
 .content-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+  padding: 0 20px;
 }
 .panel {
   background: #fff;
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
 }
 .panel-song {
   background: #fff;
   border-radius: 16px;
   padding: 20px;
-  width: 350px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
 }
 .panel-title {
   font-size: 18px;
@@ -208,7 +228,7 @@ onMounted(() => {
 .hot-albums {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;
 }
 .album-card {
   cursor: pointer;
@@ -222,7 +242,7 @@ onMounted(() => {
   aspect-ratio: 1 / 1;
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 .cover {
   width: 100%;
@@ -266,7 +286,7 @@ onMounted(() => {
   width: 100%;
 }
 .title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #111;
   white-space: nowrap;
@@ -274,16 +294,34 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 .artist {
-  margin-top: 6px;
+  margin-top: 2px;
   color: #666;
-  font-size: 13px;
+  font-size: 12px;
 }
 .list-card {
-  padding: 16px 0;
+  display: flex;
+  gap: 12px;
+  padding: 14px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.list-card:hover {
+  background: #f9f9f9;
 }
 .list-card:last-child {
   border-bottom: none;
+}
+.post-cover {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.post-text {
+  flex: 1;
+  min-width: 0;
 }
 .item-title {
   font-size: 16px;
@@ -307,15 +345,15 @@ onMounted(() => {
   color: #999;
 }
 @media (max-width: 900px) {
-  .hero-card, .content-grid {
+  .content-grid {
     grid-template-columns: 1fr;
-    flex-direction: column;
+    padding: 0;
   }
-  .hero-stats {
-    flex-wrap: wrap;
+  .carousel-section {
+    padding: 0;
   }
   .hot-albums {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>
