@@ -17,15 +17,16 @@
     <div class="songs-section">
       <h2>全部作品</h2>
       <div class="song-list" v-if="songs.length">
-        <div class="song-item" v-for="s in songs" :key="s.id" @click="playSong(s)">
-          <img :src="getImage(s.pic)" class="song-cover" />
-          <div class="song-info">
+        <div class="song-item" v-for="s in songs" :key="s.id">
+          <img :src="getImage(s.pic)" class="song-cover" @click.stop="$router.push(`/song/detail/${s.id}`)" />
+          <div class="song-info" @click="playSong(s)">
             <div class="song-name">{{ s.name }}</div>
             <div class="song-meta">
               <span>▶ {{ s.playCount || 0 }}</span>
               <span style="margin-left:12px;color:#bbb;">{{ formatTime(s.createTime) }}</span>
             </div>
           </div>
+          <el-button size="small" text @click.stop="addToList(s)">加入列表</el-button>
           <el-button size="small" @click.stop="$router.push(`/song/detail/${s.id}`)">详情</el-button>
         </div>
       </div>
@@ -49,8 +50,11 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '@/utils/request'
 import { attachImageUrl } from '@/utils'
+import { usePlayQueue } from '@/store/playQueue'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
+const queue = usePlayQueue()
 const artist = ref(null)
 const songs = ref([])
 const totalSongs = ref(null)
@@ -67,14 +71,24 @@ function formatTime(time) {
 }
 
 function playSong(s) {
-  const artistName = artist.value?.username || ''
-  window.dispatchEvent(new CustomEvent('play-song', { detail: {
-    id: s.id,
-    name: s.name,
-    artist: s.singerName || s.singer || artistName,
-    cover: getImage(s.pic),
+  queue.playSong({
+    id: s.id, name: s.name,
+    artist: s.singerName || s.singer || artist.value?.username || '未知',
+    cover: getImage(s.pic), singerUserId: s.singerUserId,
     url: s.url?.includes('://') ? s.url : attachImageUrl(s.url)
-  }}))
+  })
+}
+
+function addToList(s) {
+  const item = {
+    id: s.id, name: s.name,
+    artist: s.singerName || s.singer || artist.value?.username || '未知',
+    cover: getImage(s.pic), singerUserId: s.singerUserId,
+    url: s.url?.includes('://') ? s.url : attachImageUrl(s.url)
+  }
+  if (queue.queue.find(q => q.id === item.id)) { ElMessage.warning('已在播放列表中'); return }
+  queue.queue.push(item)
+  ElMessage.success('已加入播放列表')
 }
 
 async function loadUser() {

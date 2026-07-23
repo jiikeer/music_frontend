@@ -177,7 +177,7 @@ async function submitSong() {
 
   if (songForm.lyricsFile) {
     const lyricText = await songForm.lyricsFile.text()
-    formData.append('lyrics', lyricText)
+    formData.append('lyric', lyricText)
   }
 
   if (songForm.coverFile) {

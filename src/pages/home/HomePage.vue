@@ -101,12 +101,21 @@ const queue = usePlayQueue()
 const allSongs = ref([])
 const posts = ref([])
 
-const banners = [
-  { title: '校园原创音乐征集', subtitle: '用你的声音，唱出青春的模样', bg: 'https://picsum.photos/seed/m1/1200/320', link: '/upload' },
-  { title: '周杰伦 — 晴天', subtitle: '故事的小黄花，从出生那年就飘着', bg: 'https://picsum.photos/seed/m2/1200/320', link: '/song-list' },
-  { title: '五月天 — 倔强', subtitle: '我和我最后的倔强，握紧双手绝对不放', bg: 'https://picsum.photos/seed/m3/1200/320', link: '/song-list' },
-  { title: '音乐社区火热上线', subtitle: '来分享你的音乐故事，遇见志同道合的朋友', bg: 'https://picsum.photos/seed/m4/1200/320', link: '/community' }
-]
+const banners = computed(() => {
+  const top = allSongs.value.filter(s => s.status === 1).sort((a, b) => (b.playCount || 0) - (a.playCount || 0)).slice(0, 3)
+  if (top.length >= 3) {
+    return [
+      { title: top[0].name, subtitle: top[0].singer || top[0].singerName || '热门歌曲', bg: getImg(top[0].pic), link: '/song/detail/' + top[0].id },
+      { title: top[1].name, subtitle: top[1].singer || top[1].singerName || '热门歌曲', bg: getImg(top[1].pic), link: '/song/detail/' + top[1].id },
+      { title: top[2].name, subtitle: top[2].singer || top[2].singerName || '热门歌曲', bg: getImg(top[2].pic), link: '/song/detail/' + top[2].id },
+      { title: '音乐社区火热上线', subtitle: '来分享你的音乐故事，遇见志同道合的朋友', bg: 'https://picsum.photos/seed/m4/1200/320', link: '/community' }
+    ]
+  }
+  return [
+    { title: '校园原创音乐征集', subtitle: '用你的声音，唱出青春的模样', bg: 'https://picsum.photos/seed/m1/1200/320', link: '/upload' },
+    { title: '音乐社区火热上线', subtitle: '来分享你的音乐故事，遇见志同道合的朋友', bg: 'https://picsum.photos/seed/m4/1200/320', link: '/community' }
+  ]
+})
 
 const quickEntries = [
   { label: '歌曲', icon: Headset, bg: '#ffa502', path: '/song-list' },
