@@ -20,11 +20,15 @@
       <el-icon><EditPen /></el-icon>
       <template #title>帖子管理</template>
     </el-menu-item>
+    <el-menu-item index="/admin/singer">
+      <el-icon><UserFilled /></el-icon>
+      <template #title>歌手管理</template>
+    </el-menu-item>
   </el-menu>
 </template>
 
 <script setup>
-import { User, Headset, EditPen } from '@element-plus/icons-vue'
+import { User, Headset, EditPen, UserFilled } from '@element-plus/icons-vue'
 
 defineProps(['collapse'])
 </script>

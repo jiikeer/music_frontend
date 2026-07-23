@@ -105,6 +105,11 @@ const routes = [
         path: 'posts',
         name: 'admin-posts',
         component: () => import('@/admin/views/post/PostManage.vue')
+      },
+      {
+        path: 'singer',
+        name: 'admin-singer',
+        component: () => import('@/admin/views/singer/SingerManage.vue')
       }
     ]
   }
