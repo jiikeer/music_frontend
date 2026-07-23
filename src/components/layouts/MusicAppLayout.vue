@@ -159,6 +159,7 @@ function toggleMute() {
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function addToQueue(song) {
   if (!song || !song.id) return
   const exists = queue.queue.find(q => q.id === song.id)

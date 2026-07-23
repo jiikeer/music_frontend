@@ -32,7 +32,6 @@ import { attachImageUrl } from '@/utils'
 import { usePlayQueue } from '@/store/playQueue'
 import { ElMessage } from 'element-plus'
 
-const router = useRouter()
 const queue = usePlayQueue()
 const songs = ref([])
 const loading = ref(false)

@@ -8,10 +8,7 @@
         </nav>
       </div>
       <div class="header-center">
-        <div class="search-box" @click="showSearch = true">
-          <el-icon><Search /></el-icon>
-          <span class="search-placeholder">搜索歌曲、歌手、校园音乐人</span>
-        </div>
+        <el-input v-model="keywords" placeholder="搜索歌曲/帖子" prefix-icon="Search" size="small" clearable class="header-search-input" @keyup.enter="goSearch" />
       </div>
       <div class="header-right">
         <el-button v-if="token && !isAdmin" type="primary" round size="small" class="upload-btn" @click="$router.push('/upload')">
@@ -31,11 +28,6 @@
         </el-dropdown>
       </div>
     </div>
-    <div v-if="showSearch" class="search-overlay" @click.self="showSearch = false">
-      <div class="search-dialog">
-        <el-input v-model="keywords" placeholder="搜索歌曲、歌手、校园音乐人" prefix-icon="Search" size="large" clearable @keyup.enter="goSearch" />
-      </div>
-    </div>
   </header>
 </template>
 
@@ -44,20 +36,19 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'
-import { Search, Upload, User, Setting, Monitor, SwitchButton } from '@element-plus/icons-vue'
+import { Upload, User, Setting, Monitor, SwitchButton } from '@element-plus/icons-vue'
 import { attachImageUrl } from '@/utils'
 
 const router = useRouter()
 const userStore = useUserStore()
 const isScrolled = ref(false)
-const showSearch = ref(false)
 const keywords = ref('')
 const token = computed(() => userStore.token)
 const isAdmin = computed(() => userStore.isAdmin)
 const avatarUrl = computed(() => attachImageUrl(userStore.avatar))
 const navList = [
   { name: '首页', path: '/' },
-  { name: '排行榜', path: '/rank' },
+  { name: '歌曲', path: '/song-list' },
   { name: '歌手', path: '/singer' },
   { name: '社区', path: '/community' }
 ]
@@ -65,7 +56,6 @@ function handleLogout() { userStore.logout(); router.push('/'); ElMessage.succes
 function goAdmin() { window.open('http://localhost:8080/admin/users', '_blank') }
 function goSearch() {
   if (!keywords.value.trim()) return
-  showSearch.value = false
   router.push({ path: '/search', query: { keyword: keywords.value.trim() } })
   keywords.value = ''
 }
@@ -86,16 +76,13 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 .nav-item::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%) scaleX(0); width: 20px; height: 3px; background: #ec4141; border-radius: 2px; transition: transform 0.3s; }
 .nav-item.nav-active::after, .nav-item:hover::after { transform: translateX(-50%) scaleX(1); }
 .nav-active { color: #ec4141; font-weight: 600; }
-.header-center { flex: 1; max-width: 320px; margin: 0 24px; }
-.search-box { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f5f5f7; border-radius: 20px; cursor: pointer; transition: background 0.3s; }
-.search-box:hover { background: #ececee; }
-.search-placeholder { font-size: 13px; color: #999; }
+.header-center { flex: 1; max-width: 280px; margin: 0 24px; }
+.header-search-input :deep(.el-input__wrapper) { border-radius: 20px; background: #f5f5f7; box-shadow: none; }
+.header-search-input :deep(.el-input__inner) { font-size: 13px; }
 .header-right { display: flex; align-items: center; gap: 12px; }
 .upload-btn { background: #ec4141; border-color: #ec4141; }
 .upload-btn:hover { background: #d93939; border-color: #d93939; }
 .user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; cursor: pointer; transition: border-color 0.3s; }
 .user-avatar:hover { border-color: #ec4141; }
-.search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 1000; display: flex; justify-content: center; padding-top: 120px; }
-.search-dialog { width: 500px; max-width: 90vw; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
 @media (max-width: 900px) { .header-center { display: none; } .header-left { gap: 8px; } .nav-item { padding: 6px 8px; font-size: 13px; } }
 </style>

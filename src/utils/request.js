@@ -8,7 +8,7 @@ process.env.NODE_HOST ||
 
 const request = axios.create({
     baseURL:BASE_URL,
-    timeout:500000,
+    timeout:10000,
     withCredentials:true
 });
 // 请求拦截器

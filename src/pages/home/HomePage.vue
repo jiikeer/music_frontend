@@ -26,7 +26,7 @@
     <section class="section-block">
       <div class="rank-grid">
         <div class="rank-panel">
-          <div class="section-header"><h2>新歌速递</h2><span class="section-more" @click="$router.push('/rank')">更多 &gt;</span></div>
+          <div class="section-header"><h2>新歌速递</h2></div>
           <div class="rank-list">
             <div v-for="(s, idx) in newSongs" :key="s.id" class="rank-item" @click="playSong(s)">
               <span class="rank-idx index-normal">{{ idx + 1 }}</span>
@@ -44,7 +44,7 @@
           </div>
         </div>
         <div class="rank-panel">
-          <div class="section-header"><h2>热门歌曲榜</h2><span class="section-more" @click="$router.push('/rank')">更多 &gt;</span></div>
+          <div class="section-header"><h2>热门歌曲榜</h2></div>
           <div class="rank-list">
             <div v-for="(s, idx) in hotRankSongs" :key="s.id" class="rank-item" @click="playSong(s)">
               <span :class="['rank-idx', idx < 3 ? 'idx-top' : 'idx-norm']">{{ idx + 1 }}</span>
@@ -65,21 +65,9 @@
       </div>
     </section>
 
-    <!-- 校园热门歌手 -->
-    <section class="section-block">
-      <div class="section-header"><h2>校园热门音乐人</h2><span class="section-more" @click="$router.push('/singer')">更多 &gt;</span></div>
-      <div class="artist-row">
-        <div v-for="a in artists" :key="a.userId || a.id" class="artist-card" @click="$router.push('/user-page/' + (a.userId || a.id))">
-          <img :src="getImg(a.avatar || a.pic)" class="artist-avatar" />
-          <div class="artist-name">{{ a.username || a.name || '未知' }}</div>
-          <div class="artist-sub">{{ a.introduction || '校园音乐人' }}</div>
-        </div>
-      </div>
-    </section>
-
     <!-- 热门社区动态 -->
     <section class="section-block">
-      <div class="section-header"><h2>音乐社区热门</h2><span class="section-more" @click="$router.push('/community')">更多 &gt;</span></div>
+      <div class="section-header"><h2>音乐社区热门</h2></div>
       <div class="post-grid">
         <div v-for="p in posts" :key="p.id" class="post-card" @click="$router.push('/post/detail/' + p.id)">
           <div class="post-top">
@@ -101,10 +89,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Medal, UserFilled, ChatDotRound, Upload, Star } from '@element-plus/icons-vue'
+import { Headset, UserFilled, ChatDotRound, Upload, Star } from '@element-plus/icons-vue'
 import { getHotSongList } from '@/api/song'
 import { getPostPage } from '@/api/post'
-import { getAllSinger } from '@/api/singer'
 import { attachImageUrl } from '@/utils'
 import { usePlayQueue } from '@/store/playQueue'
 import { ElMessage } from 'element-plus'
@@ -113,18 +100,16 @@ const router = useRouter()
 const queue = usePlayQueue()
 const allSongs = ref([])
 const posts = ref([])
-const artists = ref([])
 
 const banners = [
   { title: '校园原创音乐征集', subtitle: '用你的声音，唱出青春的模样', bg: 'https://picsum.photos/seed/m1/1200/320', link: '/upload' },
-  { title: '周杰伦 — 晴天', subtitle: '故事的小黄花，从出生那年就飘着', bg: 'https://picsum.photos/seed/m2/1200/320', link: '/rank' },
-  { title: '五月天 — 倔强', subtitle: '我和我最后的倔强，握紧双手绝对不放', bg: 'https://picsum.photos/seed/m3/1200/320', link: '/rank' },
-  { title: '音乐社区火热上线', subtitle: '来分享你的音乐故事，遇见志同道合的朋友', bg: 'https://picsum.photos/seed/m4/1200/320', link: '/community' },
-  { title: '校园音乐排行榜', subtitle: '发现校园里最受欢迎的好声音', bg: 'https://picsum.photos/seed/m5/1200/320', link: '/rank' }
+  { title: '周杰伦 — 晴天', subtitle: '故事的小黄花，从出生那年就飘着', bg: 'https://picsum.photos/seed/m2/1200/320', link: '/song-list' },
+  { title: '五月天 — 倔强', subtitle: '我和我最后的倔强，握紧双手绝对不放', bg: 'https://picsum.photos/seed/m3/1200/320', link: '/song-list' },
+  { title: '音乐社区火热上线', subtitle: '来分享你的音乐故事，遇见志同道合的朋友', bg: 'https://picsum.photos/seed/m4/1200/320', link: '/community' }
 ]
 
 const quickEntries = [
-  { label: '校园总榜', icon: Medal, bg: '#ffa502', path: '/rank' },
+  { label: '歌曲', icon: Headset, bg: '#ffa502', path: '/song-list' },
   { label: '原创歌手', icon: UserFilled, bg: '#5352ed', path: '/singer' },
   { label: '音乐社区', icon: ChatDotRound, bg: '#1e90ff', path: '/community' },
   { label: '我要上传', icon: Upload, bg: '#ec4141', path: '/upload' }
@@ -175,15 +160,7 @@ async function loadPosts() {
   } catch (e) { console.error(e) }
 }
 
-async function loadArtists() {
-  try {
-    const res = await getAllSinger()
-    const d = res?.data || []
-    artists.value = (Array.isArray(d) ? d : []).slice(0, 6)
-  } catch (e) { console.error(e) }
-}
-
-onMounted(() => { loadSongs(); loadPosts(); loadArtists() })
+onMounted(() => { loadSongs(); loadPosts() })
 </script>
 
 <style scoped>
@@ -226,15 +203,6 @@ onMounted(() => { loadSongs(); loadPosts(); loadArtists() })
 .link-artist { color: #ec4141; cursor: pointer; }
 .link-artist:hover { text-decoration: underline; }
 .rank-extra { margin-left: 6px; }
-
-.artist-row { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 4px; }
-.artist-row::-webkit-scrollbar { display: none; }
-.artist-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; min-width: 100px; padding: 8px; border-radius: 8px; transition: transform 0.3s; }
-.artist-card:hover { transform: translateY(-4px); }
-.artist-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; transition: transform 0.3s, border-color 0.3s; }
-.artist-avatar:hover { transform: scale(1.05); border-color: #ec4141; }
-.artist-name { font-size: 14px; font-weight: 500; color: #333; }
-.artist-sub { font-size: 12px; color: #999; }
 
 .post-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .post-card { cursor: pointer; border-radius: 8px; background: #fafafa; padding: 14px; transition: transform 0.3s, box-shadow 0.3s; }
