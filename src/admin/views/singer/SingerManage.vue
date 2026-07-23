@@ -17,7 +17,7 @@
       <el-table-column prop="introduction" label="简介" show-overflow-tooltip />
       <el-table-column label="头像" width="80">
         <template #default="{ row }">
-          <el-image v-if="row.pic" :src="row.pic" style="width: 40px; height: 40px; border-radius: 50%" :preview-src-list="[row.pic]" />
+          <el-image v-if="row.pic" :src="getPicUrl(row.pic)" style="width: 40px; height: 40px; border-radius: 50%" :preview-src-list="[getPicUrl(row.pic)]" />
         </template>
       </el-table-column>
       <el-table-column label="操作" width="180">
@@ -33,6 +33,20 @@
     <el-dialog :title="isEdit ? '编辑歌手' : '新增歌手'" v-model="dialogVisible" width="500px">
       <el-form :model="form" label-width="80px">
         <el-form-item label="姓名"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="头像">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <el-upload
+              :show-file-list="false"
+              :before-upload="beforePicUpload"
+              :http-request="uploadPic"
+              accept="image/*"
+            >
+              <img v-if="form.pic || picPreview" :src="picPreview || getPicUrl(form.pic)" style="width:80px;height:80px;border-radius:50%;object-fit:cover;" />
+              <el-button v-else type="primary" size="small">选择图片</el-button>
+            </el-upload>
+            <span style="font-size:12px;color:#999;">点击头像更换</span>
+          </div>
+        </el-form-item>
         <el-form-item label="性别">
           <el-select v-model="form.sex">
             <el-option label="女" :value="0" />
@@ -57,8 +71,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getAllSinger, addSinger, updateSinger, deleteSinger } from '@/api'
+import { getAllSinger, addSinger, updateSinger, deleteSinger, uploadSingerPic } from '@/api'
 import { getSex } from '@/utils/mixin'
+import { getBaseURL } from '@/utils/request'
+import { ElMessage } from 'element-plus'
 import DelDialog from '@/admin/components/DelDialog.vue'
 
 const query = ref('')
@@ -71,6 +87,39 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const form = ref({})
 const delDialogRef = ref(null)
+const picPreview = ref('')
+const pendingFile = ref(null)
+
+function getPicUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http') || path.startsWith('blob')) return path
+  return getBaseURL() + '/' + path.replace(/^\/+/, '')
+}
+
+function beforePicUpload(file) {
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) return false
+  picPreview.value = URL.createObjectURL(file)
+  pendingFile.value = file
+  return false // 阻止 el-upload 的默认上传，我们用自定义 http-request
+}
+
+async function uploadPic(options) {
+  if (!form.value.id) {
+    // 还没保存的歌手不能上传头像，图片已经用 beforePicUpload 预览了，保存时再处理
+    return
+  }
+  try {
+    const res = await uploadSingerPic(form.value.id, options.file)
+    const data = res?.data
+    form.value.pic = data?.url || (typeof data === 'string' ? data : '')
+    picPreview.value = ''
+    // 刷新列表以显示新头像
+    fetchData()
+  } catch (e) {
+    console.error('头像上传失败', e)
+  }
+}
 
 const fetchData = async () => {
   loading.value = true
@@ -89,12 +138,34 @@ const handleSearch = () => { currentPage.value = 1; fetchData() }
 const openDialog = (row) => {
   isEdit.value = !!row
   form.value = row ? { ...row } : { sex: 1 }
+  picPreview.value = ''
   dialogVisible.value = true
 }
 
 const submit = async () => {
-  if (isEdit.value) await updateSinger(form.value)
-  else await addSinger(form.value)
+  if (isEdit.value) {
+    await updateSinger(form.value)
+    // 编辑模式下如果选了新头像，上传
+    if (pendingFile.value) {
+      const res = await uploadSingerPic(form.value.id, pendingFile.value)
+      const data = res?.data
+      if (data) {
+        form.value.pic = typeof data === 'string' ? data : (data.url || '')
+      }
+    }
+    ElMessage.success('编辑成功')
+  } else {
+    const res = await addSinger(form.value)
+    // 新增成功后，如果选了头像图片，自动上传
+    // api() 返回 res.data 即 R 对象 { code, success, data: singerId }
+    const newId = res?.data
+    if (newId && pendingFile.value) {
+      await uploadSingerPic(newId, pendingFile.value)
+    }
+    ElMessage.success('添加成功')
+  }
+  picPreview.value = ''
+  pendingFile.value = null
   dialogVisible.value = false
   fetchData()
 }
