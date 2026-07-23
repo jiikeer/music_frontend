@@ -9,7 +9,12 @@
             <el-input v-model="songForm.name" />
           </el-form-item>
           <el-form-item label="歌手">
-            <el-input v-model="songForm.artist" />
+            <el-input
+              v-model="songForm.artist"
+              :disabled="!isAdmin"
+              :style="isAdmin ? {} : { backgroundColor: '#f5f5f5' }"
+            />
+            <span v-if="!isAdmin" style="font-size:12px;color:#999;">歌手已默认设置为您的用户名</span>
           </el-form-item>
           <el-form-item label="封面图">
             <el-upload
@@ -113,15 +118,23 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, computed, onMounted } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/user'
 import request from '@/utils/request'
 
 const userStore = useUserStore()
+const isAdmin = computed(() => userStore.isAdmin)
 const songForm = reactive({ name: '', artist: '', audioFile: null, lyricsFile: null, coverFile: null, coverUrl: '' })
 const postForm = reactive({ title: '', content: '', coverFile: null, coverUrl: '' })
+
+// 页面加载时自动填充歌手为当前用户名
+onMounted(() => {
+  if (!isAdmin.value && userStore.username) {
+    songForm.artist = userStore.username
+  }
+})
 
 function handleAudioChange(uploadFile) {
   const file = uploadFile.raw
@@ -159,6 +172,7 @@ async function submitSong() {
   formData.append('userId', userStore.userId)
   formData.append('name', songForm.name.trim())
   formData.append('introduction', songForm.artist?.trim() || '')
+  formData.append('singer', songForm.artist?.trim() || '')
   formData.append('songFile', songForm.audioFile, songForm.audioFile.name)
 
   if (songForm.lyricsFile) {

@@ -7,10 +7,14 @@
         <div class="info-right">
           <div class="title">{{ song.name }}</div>
           <div class="basic-info">
-            <span class="artist-link" @click="goArtist(song.singerId)" v-if="song.singerId">
-              歌手：{{ song.singerName || song.introduction || song.artist }}
+            <span
+              class="artist-link"
+              @click="goArtist(song)"
+              v-if="song.singerUserId"
+            >
+              歌手：{{ song.singerName || song.singer || song.introduction || song.artist }}
             </span>
-            <span v-else>歌手：{{ song.singerName || song.introduction || song.artist }}</span>
+            <span v-else>歌手：{{ song.singerName || song.singer || song.introduction || song.artist }}</span>
           </div>
           <div class="button-row">
             <span class="btn play" @click="togglePlay">
@@ -121,8 +125,12 @@ function getSourceUrl(){
   return song.value.url + separator + '_t=' + Date.now()
 }
 
-function goArtist(artistId) {
-  if (artistId) router.push(`/artist/${artistId}`)
+function goArtist(song) {
+  if (song.singerUserId) {
+    router.push(`/user-page/${song.singerUserId}`)
+  } else if (song.singerId) {
+    router.push(`/artist/${song.singerId}`)
+  }
 }
 
 function togglePlay(){

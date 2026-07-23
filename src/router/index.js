@@ -55,6 +55,11 @@ const routes = [
           name:"ArtistDetail",
           component:()=>import("@/pages/artist/ArtistDetail.vue")
       },
+      {
+          path:"/user-page/:id",
+          name:"UserPage",
+          component:()=>import("@/pages/artist/ArtistDetail.vue")
+      },
     ]
   },
   {

@@ -1,14 +1,17 @@
 <template>
   <div class="artist-page">
     <div v-if="artist" class="artist-card">
-      <img :src="getImage(artist.pic)" class="artist-pic" />
+      <img :src="getImage(artist.avatar)" class="artist-pic" />
       <div class="artist-info">
-        <h1 class="artist-name">{{ artist.name }}</h1>
-        <p class="artist-intro">{{ artist.introduction }}</p>
+        <h1 class="artist-name">{{ artist.username || artist.name || '未知用户' }}</h1>
+        <p class="artist-intro">{{ artist.introduction || '这个用户很懒，什么都没写~' }}</p>
         <div class="artist-meta">
-          <span>共 {{ songs.length }} 首歌曲</span>
+          <span v-if="totalSongs !== null">共 {{ totalSongs }} 首歌曲</span>
         </div>
       </div>
+    </div>
+    <div v-else class="artist-card">
+      <p style="color:#999;">加载中...</p>
     </div>
 
     <div class="songs-section">
@@ -20,12 +23,23 @@
             <div class="song-name">{{ s.name }}</div>
             <div class="song-meta">
               <span>▶ {{ s.playCount || 0 }}</span>
+              <span style="margin-left:12px;color:#bbb;">{{ formatTime(s.createTime) }}</span>
             </div>
           </div>
           <el-button size="small" @click.stop="$router.push(`/song/detail/${s.id}`)">详情</el-button>
         </div>
       </div>
-      <el-empty v-else description="该歌手暂无作品" />
+      <el-empty v-else description="该用户暂无作品" />
+      <el-pagination
+        v-if="totalSongs > pageSize"
+        class="pagination"
+        background
+        layout="prev, pager, next"
+        :total="totalSongs"
+        :page-size="pageSize"
+        v-model:current-page="currentPage"
+        @current-change="loadSongs"
+      />
     </div>
   </div>
 </template>
@@ -33,44 +47,68 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getSingerDetail, getSingerSongs } from '@/api/singer'
+import { getSingerSongs } from '@/api/singer'
+import { api } from '@/utils/request'
 import { attachImageUrl } from '@/utils'
 
 const route = useRoute()
 const artist = ref(null)
 const songs = ref([])
+const totalSongs = ref(null)
+const pageSize = ref(20)
+const currentPage = ref(1)
 
 function getImage(path) { return attachImageUrl(path) }
 
+function formatTime(time) {
+  if (!time) return ''
+  const d = new Date(time)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 function playSong(s) {
-  const artistName = artist.value?.name || ''
+  const artistName = artist.value?.username || ''
   window.dispatchEvent(new CustomEvent('play-song', { detail: {
     id: s.id,
     name: s.name,
-    artist: s.singerName || artistName,
+    artist: s.singerName || s.singer || artistName,
     cover: getImage(s.pic),
     url: s.url?.includes('://') ? s.url : attachImageUrl(s.url)
   }}))
 }
 
-async function load() {
-  const id = route.params.id
+async function loadUser() {
+  const userId = route.params.id
   try {
-    const [aRes, sRes] = await Promise.all([
-      getSingerDetail(id),
-      getSingerSongs(id)
-    ])
-    const aData = aRes?.data
-    artist.value = aData?.data || aData || {}
-    const sData = sRes?.data
-    songs.value = Array.isArray(sData) ? sData : (sData?.data || [])
+    const res = await api({ url: `/user/detail?id=${userId}` })
+    // api() returns the R object directly: { code, success, data: {...} }
+    artist.value = res?.data || {}
   } catch (e) {
     artist.value = null
+  }
+}
+
+async function loadSongs() {
+  const userId = route.params.id
+  try {
+    const res = await api({
+      url: '/song/singer-songs',
+      params: { singerUserId: userId, page: currentPage.value, size: pageSize.value }
+    })
+    // api() returns { code, success, data: { records, total, ... } }
+    const records = res?.data?.records || []
+    songs.value = Array.isArray(records) ? records : []
+    totalSongs.value = res?.data?.total ?? songs.value.length
+  } catch (e) {
     songs.value = []
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  await loadUser()
+  loadSongs()
+})
 </script>
 
 <style scoped>
@@ -84,7 +122,7 @@ onMounted(load)
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   align-items: center;
 }
-.artist-pic { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.artist-pic { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #eee; }
 .artist-name { font-size: 32px; font-weight: 700; margin-bottom: 12px; }
 .artist-intro { font-size: 15px; color: #666; line-height: 1.7; max-width: 600px; margin-bottom: 12px; }
 .artist-meta { font-size: 14px; color: #999; }
@@ -105,4 +143,5 @@ onMounted(load)
 .song-info { flex: 1; }
 .song-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .song-meta { font-size: 12px; color: #999; }
+.pagination { margin-top: 16px; justify-content: flex-end; }
 </style>
