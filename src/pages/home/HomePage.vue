@@ -38,6 +38,7 @@
                   <span v-else>{{ s.singer || s.singerName || s.introduction || '未知' }}</span>
                 </div>
               </div>
+              <el-button size="small" text @click.stop="addToList(s)">加入列表</el-button>
               <el-button size="small" text @click.stop="$router.push('/song/detail/' + s.id)">详情</el-button>
             </div>
           </div>
@@ -56,6 +57,7 @@
                   <span class="rank-extra">▶ {{ fmtCount(s.playCount) }}</span>
                 </div>
               </div>
+              <el-button size="small" text @click.stop="addToList(s)">加入列表</el-button>
               <el-button size="small" text @click.stop="$router.push('/song/detail/' + s.id)">详情</el-button>
             </div>
           </div>
@@ -105,6 +107,7 @@ import { getPostPage } from '@/api/post'
 import { getAllSinger } from '@/api/singer'
 import { attachImageUrl } from '@/utils'
 import { usePlayQueue } from '@/store/playQueue'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const queue = usePlayQueue()
@@ -141,6 +144,18 @@ function playSong(s) {
     cover: getImg(s.pic), singerUserId: s.singerUserId,
     url: s.url && s.url.includes('://') ? s.url : attachImageUrl(s.url)
   })
+}
+
+function addToList(s) {
+  const item = {
+    id: s.id, name: s.name,
+    artist: s.singer || s.singerName || s.introduction || '未知',
+    cover: getImg(s.pic), singerUserId: s.singerUserId,
+    url: s.url && s.url.includes('://') ? s.url : attachImageUrl(s.url)
+  }
+  if (queue.queue.find(q => q.id === item.id)) { ElMessage.warning('该歌曲已在播放列表中'); return }
+  queue.queue.push(item)
+  ElMessage.success('已加入播放列表')
 }
 
 async function loadSongs() {

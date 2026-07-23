@@ -87,6 +87,8 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/utils/request'
 import MusicHeader from './MusicHeader.vue'
 import PlayerDetail from '@/components/PlayerDetail.vue'
 import { ArrowLeft, ArrowRight, VideoPause, VideoPlay, List, Close, VideoOff } from '@element-plus/icons-vue'
@@ -112,6 +114,7 @@ function togglePlay() {
 }
 
 function onTimeUpdate() {
+  onTimeUpdateTick()
   if (!audioRef.value) return
   const el = audioRef.value
   progress.value = Math.min(100, (el.currentTime / (el.duration || 1)) * 100)
@@ -156,13 +159,52 @@ function toggleMute() {
   }
 }
 
+function addToQueue(song) {
+  if (!song || !song.id) return
+  const exists = queue.queue.find(q => q.id === song.id)
+  if (exists) {
+    ElMessage.warning('该歌曲已在播放列表中')
+    return
+  }
+  queue.queue.push(song)
+  ElMessage.success('已加入播放列表')
+}
+
 function playQueueIndex(idx) {
   queue.playIndex(idx)
   showQueueDrawer.value = false
 }
 
-function removeQueueItem(idx) { queue.removeFromQueue(idx) }
+function removeQueueItem(idx) {
+  if (queue.queue.length === 1) {
+    clearQueue()
+    return
+  }
+  queue.removeFromQueue(idx)
+}
+
 function clearQueue() { queue.clear(); showQueueDrawer.value = false }
+
+// 30秒判定：播放达30秒后调用后端播放量+1
+let playCounted = false
+function onTimeUpdateTick() {
+  if (!audioRef.value || playCounted) return
+  if (audioRef.value.currentTime >= 30) {
+    playCounted = true
+    const song = currentSong.value
+    if (song && song.id) {
+      request.post('/song/' + song.id + '/play').catch(() => {})
+    }
+  }
+}
+
+function resetPlayCount() {
+  playCounted = false
+}
+
+watch(() => currentSong.value, () => {
+  resetPlayCount()
+}, { deep: false })
 
 watch(() => queue.currentSong, (song) => {
   if (song) {

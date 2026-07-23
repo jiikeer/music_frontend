@@ -47,7 +47,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getSingerSongs } from '@/api/singer'
 import { api } from '@/utils/request'
 import { attachImageUrl } from '@/utils'
 
