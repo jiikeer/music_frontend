@@ -55,6 +55,10 @@
                     <div class="comment-content">{{ c.content }}</div>
                     <div class="comment-time">{{ formatTime(c.createTime) }}</div>
                     <div class="comment-actions">
+                        <span class="like-btn" :class="{ liked: c.isLiked }" @click="toggleCommentLike(c)">
+                            <el-icon><component :is="c.isLiked ? StarFilled : Star" /></el-icon>
+                            <span class="like-count">{{ c.likeCount || 0 }}</span>
+                        </span>
                         <el-button size="mini" type="text" @click="replyVisible[c.id] = !replyVisible[c.id]">回复</el-button>
                         <el-button v-if="c.userId && c.userId==userId" size="mini" type="text" @click="removeComment(c.id)">删除</el-button>
                     </div>
@@ -68,10 +72,14 @@
 
                     <div class="replies" v-if="c.replies && c.replies.length">
                         <div class="reply-item" v-for="r in c.replies" :key="r.id">
-                            <div class="comment-user">{{ r.userName || r.userId || '匿名' }} 回复</div>
+                            <div class="comment-user">{{ r.username || r.userId || '匿名' }} 回复</div>
                             <div class="comment-content">{{ r.content }}</div>
                             <div class="comment-time">{{ formatTime(r.createTime) }}</div>
                             <div class="comment-actions">
+                                <span class="like-btn" :class="{ liked: r.isLiked }" @click="toggleCommentLike(r)">
+                                    <el-icon><component :is="r.isLiked ? StarFilled : Star" /></el-icon>
+                                    <span class="like-count">{{ r.likeCount || 0 }}</span>
+                                </span>
                                 <el-button v-if="r.userId && r.userId==userId" size="mini" type="text" @click="removeComment(r.id)">删除</el-button>
                             </div>
                         </div>
@@ -93,7 +101,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { getPostDetail, getPostComments, addPostComment, deletePostComment, likePost } from "@/api/post";
+import { getPostDetail, getPostComments, addPostComment, deletePostComment, likePost, likePostComment } from "@/api/post";
 import { attachImageUrl } from "@/utils";
 import { Star, StarFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -146,7 +154,7 @@ async function loadData(){
 async function loadComments(){
     const id = route.params.id
     try{
-        const res = await getPostComments(id)
+        const res = await getPostComments(id, userId.value || undefined)
         const raw = res.data.data || []
         // build nested comments (replies)
         const map = {}
@@ -241,6 +249,23 @@ async function toggleLike(){
             post.value.isLiked = false
             post.value.likeCount = Math.max(0,(post.value.likeCount||1)-1)
             ElMessage.success('已取消点赞')
+        }
+    }catch(e){
+        ElMessage.error('点赞失败')
+    }
+}
+
+async function toggleCommentLike(c){
+    if(!userId.value){ ElMessage.error('请先登录'); return }
+    try{
+        await likePostComment({ userId: Number(userId.value), commentId: c.id })
+        // 乐观更新
+        if(c.isLiked){
+            c.isLiked = false
+            c.likeCount = Math.max(0, (c.likeCount || 1) - 1)
+        }else{
+            c.isLiked = true
+            c.likeCount = (c.likeCount || 0) + 1
         }
     }catch(e){
         ElMessage.error('点赞失败')
@@ -373,6 +398,24 @@ h1{
 }
 .comment-actions{
     margin-top:8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.like-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    cursor:pointer;
+    color:#bbb;
+    user-select:none;
+}
+.like-btn.liked{
+    color:#f6a900;
+}
+.like-btn .like-count{
+    font-size:13px;
+    color:inherit;
 }
 .reply-box{
     margin-top:8px;

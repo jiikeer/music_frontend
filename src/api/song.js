@@ -124,16 +124,33 @@ export function deleteSongComment(
 /**
  * 查询歌曲评论
  *
- * GET /song/comment/list?songId=xx
+ * GET /song/comment/list?songId=xx&userId=xx (userId可选)
  */
-export function getSongComments(songId){
+export function getSongComments(songId, userId){
     return request({
         url:"/song/comment/list",
         method:"GET",
         params:{
-            songId
+            songId,
+            ...(userId ? { userId } : {})
         }
     })
+}
+
+/**
+ * 歌曲评论点赞/取消点赞
+ *
+ * POST /song/comment/like
+ *
+ * JSON:
+ * {
+ *   userId,
+ *   commentId,
+ *   commentType: "song"
+ * }
+ */
+export function likeSongComment(data){
+    return request.post("/song/comment/like", data)
 }
 
 /**

@@ -16,3 +16,12 @@ export function deleteComment(id) {
 export function addComment(data) {
   return api({ method: 'post', url: '/comment/add', data })
 }
+
+/**
+ * 获取用户点赞过的评论
+ *
+ * GET /comment/liked?userId=
+ */
+export function getUserLikedComments(userId) {
+  return api({ url: '/comment/liked', params: { userId } })
+}

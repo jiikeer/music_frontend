@@ -165,15 +165,31 @@ export function deletePostComment(
 /**
  * 查询帖子评论
  *
- * GET /post/comment/list?postId=
+ * GET /post/comment/list?postId=&userId= (userId可选)
  */
-export function getPostComments(postId){
+export function getPostComments(postId, userId){
     return request({
         url:"/post/comment/list",
         method:"GET",
         params:{
-            postId
+            postId,
+            ...(userId ? { userId } : {})
         }
     })
 
+}
+/**
+ * 帖子评论点赞/取消点赞
+ *
+ * POST /post/comment/like
+ *
+ * JSON:
+ * {
+ *   userId,
+ *   commentId,
+ *   commentType: "post"
+ * }
+ */
+export function likePostComment(data){
+    return request.post("/post/comment/like", data)
 }

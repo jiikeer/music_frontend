@@ -38,12 +38,12 @@
       </div>
 
       <div class="comments">
-          <div class="comment-form">
+        <h3>评论（{{ song.commentCount || comments.length }}）</h3>
+        <div class="comment-form">
           <el-input type="textarea" v-model="newComment" :rows="3" placeholder="写下你的评论..." />
           <div style="margin-top:8px;text-align:right;">
             <el-button type="primary" @click="submitComment">发表评论</el-button>
           </div>
-        <h3>评论（{{ song.commentCount || comments.length }}）</h3>
         </div>
         <div class="comment-list">
           <div class="comment-item" v-for="c in comments" :key="c.id">
@@ -51,7 +51,36 @@
             <div class="comment-content">{{ c.content }}</div>
             <div class="comment-time">{{ formatTime(c.createTime) }}</div>
             <div class="comment-actions">
+              <span class="like-btn" :class="{ liked: c.isLiked }" @click="toggleCommentLike(c)">
+                <el-icon><component :is="c.isLiked ? StarFilled : Star" /></el-icon>
+                <span class="like-count">{{ c.likeCount || 0 }}</span>
+              </span>
+              <el-button size="mini" type="text" @click="replyVisible[c.id] = !replyVisible[c.id]">回复</el-button>
               <el-button v-if="c.userId && c.userId==userId" size="mini" type="text" @click="removeComment(c.id)">删除</el-button>
+            </div>
+
+            <!-- 回复输入框 -->
+            <div v-if="replyVisible[c.id]" class="reply-box">
+              <el-input type="textarea" v-model="replyTexts[c.id]" :rows="2" placeholder="写回复..." />
+              <div style="text-align:right;margin-top:8px;">
+                <el-button size="small" type="primary" @click="submitReply(c.id)">发送回复</el-button>
+              </div>
+            </div>
+
+            <!-- 嵌套回复 -->
+            <div class="replies" v-if="c.replies && c.replies.length">
+              <div class="reply-item" v-for="r in c.replies" :key="r.id">
+                <div class="comment-user">{{ r.username || r.userId || '匿名' }} 回复</div>
+                <div class="comment-content">{{ r.content }}</div>
+                <div class="comment-time">{{ formatTime(r.createTime) }}</div>
+                <div class="comment-actions">
+                  <span class="like-btn" :class="{ liked: r.isLiked }" @click="toggleCommentLike(r)">
+                    <el-icon><component :is="r.isLiked ? StarFilled : Star" /></el-icon>
+                    <span class="like-count">{{ r.likeCount || 0 }}</span>
+                  </span>
+                  <el-button v-if="r.userId && r.userId==userId" size="mini" type="text" @click="removeComment(r.id)">删除</el-button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -63,7 +92,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getSongDetail, collectSong, getSongComments, addSongComment, deleteSongComment } from '@/api/song'
+import { getSongDetail, collectSong, getSongComments, addSongComment, deleteSongComment, likeSongComment } from '@/api/song'
 import { attachImageUrl } from '@/utils'
 import { Star, StarFilled, Download, VideoPlay } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -75,6 +104,8 @@ const song = ref(null)
 const playing = ref(false)
 const comments = ref([])
 const newComment = ref('')
+const replyTexts = ref({})
+const replyVisible = ref({})
 const showAll = ref(false)
 const userStore = useUserStore()
 const userId = computed(()=>userStore.userId)
@@ -170,8 +201,20 @@ async function toggleCollect(){
 
 async function loadComments(){
   try{
-    const res = await getSongComments(route.params.id)
-    comments.value = res.data.data || []
+    const res = await getSongComments(route.params.id, userId.value || undefined)
+    const raw = res.data.data || []
+    // build nested comments (replies)
+    const map = {}
+    raw.forEach(c=>{ c.replies = []; map[c.id]=c })
+    const roots = []
+    raw.forEach(c=>{
+      if(c.parentId && map[c.parentId]){
+        map[c.parentId].replies.push(c)
+      }else{
+        roots.push(c)
+      }
+    })
+    comments.value = roots
   }catch(e){ comments.value = [] }
 }
 
@@ -183,10 +226,34 @@ async function submitComment(){
     ElMessage.success('评论已发布')
     newComment.value = ''
     await loadComments()
-    if(song.value) song.value.commentCount = comments.value.length
+    if(song.value) song.value.commentCount = comments.value.reduce((sum,c)=>sum+1+(c.replies?c.replies.length:0),0)
   }catch(e){
     console.error('评论提交失败:', e)
     ElMessage.error('评论失败：' + (e.response?.data?.message || e.message || '未知错误'))
+  }
+}
+
+async function submitReply(commentId){
+  const text = (replyTexts.value[commentId]||'').trim()
+  if(!text){
+    ElMessage.error('回复内容不能为空')
+    return
+  }
+  if(!userId.value){ ElMessage.error('请先登录'); return }
+  try{
+    await addSongComment({
+      targetId: Number(route.params.id),
+      userId: Number(userId.value),
+      content: text,
+      parentId: commentId
+    })
+    ElMessage.success('回复已发布')
+    replyTexts.value[commentId] = ''
+    replyVisible.value[commentId] = false
+    await loadComments()
+    if(song.value) song.value.commentCount = comments.value.reduce((sum,c)=>sum+1+(c.replies?c.replies.length:0),0)
+  }catch(e){
+    ElMessage.error('回复失败')
   }
 }
 
@@ -196,8 +263,25 @@ async function removeComment(id){
     await deleteSongComment(id, userId.value)
     ElMessage.success('评论已删除')
     await loadComments()
-    if(song.value) song.value.commentCount = comments.value.length
+    if(song.value) song.value.commentCount = comments.value.reduce((sum,c)=>sum+1+(c.replies?c.replies.length:0),0)
   }catch(e){ ElMessage.error('删除失败') }
+}
+
+async function toggleCommentLike(c){
+  if(!userId.value){ ElMessage.error('请先登录'); return }
+  try{
+    await likeSongComment({ userId: Number(userId.value), commentId: c.id })
+    // 乐观更新
+    if(c.isLiked){
+      c.isLiked = false
+      c.likeCount = Math.max(0, (c.likeCount || 1) - 1)
+    }else{
+      c.isLiked = true
+      c.likeCount = (c.likeCount || 0) + 1
+    }
+  }catch(e){
+    ElMessage.error('点赞失败')
+  }
 }
 
 onMounted(()=>{ loadData() })
@@ -235,5 +319,13 @@ onMounted(()=>{ loadData() })
 .comment-list{ display:flex;flex-direction:column;gap:12px;margin-top:12px }
 .comment-item{ padding:10px;background:#fafafa;border-radius:8px }
 .comment-user{ font-weight:600 }
+.comment-content{ margin-top:4px; color:#444; }
 .comment-time{ color:#999;font-size:12px;margin-top:6px }
+.comment-actions{ margin-top:8px; display:flex; align-items:center; gap:8px; }
+.like-btn{ display:inline-flex; align-items:center; gap:4px; cursor:pointer; color:#bbb; user-select:none; }
+.like-btn.liked{ color:#f6a900; }
+.like-btn .like-count{ font-size:13px; color:inherit; }
+.reply-box{ margin-top:8px; }
+.replies{ margin-top:10px; padding-left:12px; border-left:2px solid #f0f0f0; display:flex; flex-direction:column; gap:8px; }
+.reply-item{ padding:8px; background:#fff; border-radius:6px; }
 </style>

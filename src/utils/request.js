@@ -88,7 +88,7 @@ export function api(options){
             return request
             .get(
                 options.url,
-                options.config
+                { ...options.config, params: options.params }
             )
             .then(res=>res.data);
     }
