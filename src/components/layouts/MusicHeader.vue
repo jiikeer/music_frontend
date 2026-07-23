@@ -2,7 +2,7 @@
   <header class="music-header">
     <div class="header-left">
       <div class="header-title">{{ musicName }}</div>
-      <el-input class="header-search" v-model="keywords" placeholder="搜索歌曲" @keyup.enter="goSearch" />
+      <el-input class="header-search" v-model="keywords" placeholder="搜索" @keyup.enter="goSearch" />
       <el-menu class="header-menu" mode="horizontal" :ellipsis="false" @select="handleHeaderSelect">
         <el-menu-item v-for="item in headerNavList" :key="item.path" :index="item.path">
           {{ item.name }}
