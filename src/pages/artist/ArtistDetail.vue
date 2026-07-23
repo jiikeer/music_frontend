@@ -85,6 +85,7 @@ async function loadUser() {
     // api() returns the R object directly: { code, success, data: {...} }
     artist.value = res?.data || {}
   } catch (e) {
+    console.error('加载用户信息失败', e)
     artist.value = null
   }
 }
@@ -96,11 +97,12 @@ async function loadSongs() {
       url: '/song/singer-songs',
       params: { singerUserId: userId, page: currentPage.value, size: pageSize.value }
     })
-    // api() returns { code, success, data: { records, total, ... } }
+    // api() returns { code, data: { records, total, ... } }
     const records = res?.data?.records || []
     songs.value = Array.isArray(records) ? records : []
     totalSongs.value = res?.data?.total ?? songs.value.length
   } catch (e) {
+    console.error('加载作品失败', e)
     songs.value = []
   }
 }
