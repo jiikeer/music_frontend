@@ -1,53 +1,94 @@
 <template>
   <div class="home-page">
-    <section class="carousel-section">
-      <el-carousel :interval="4000" trigger="click" type="card" height="360px">
-        <el-carousel-item v-for="song in carouselSongs" :key="song.id">
-          <div class="carousel-card" @click="goSongDetail(song.id)">
-            <img :src="attachImageUrl(song.pic)" alt="cover" class="carousel-image" />
-            <div class="carousel-info">
-              <div class="carousel-name">{{ song.name }}</div>
-              <div class="carousel-artist">{{ song.introduction || song.artist }}</div>
-            </div>
+    <!-- Banner -->
+    <section class="banner-section">
+      <el-carousel :interval="3000" trigger="click" height="320px" indicator-position="none" arrow="always">
+        <el-carousel-item v-for="(item, idx) in banners" :key="idx">
+          <div class="banner-card" :style="{ backgroundImage: 'url(' + item.bg + ')' }" @click="goLink(item.link)">
+            <div class="banner-mask"></div>
+            <div class="banner-text"><h2>{{ item.title }}</h2><p>{{ item.subtitle }}</p></div>
           </div>
         </el-carousel-item>
       </el-carousel>
     </section>
 
-    <section class="content-grid">
-      <div class="panel-song">
-        <div class="panel-title">热门歌曲</div>
-        <div class="hot-albums">
-          <div class="album-card" v-for="song in hotSongs" :key="song.id" @click="goSongDetail(song.id)">
-            <div class="cover-wrap">
-              <img :src="attachImageUrl(song.pic)" alt="cover" class="cover" />
-              <div class="badge-overlay">
-                <el-icon><Headset /></el-icon>
-                <span>{{ song.playCount }}</span>
+    <!-- 快捷入口 -->
+    <section class="quick-section">
+      <div class="quick-grid">
+        <div v-for="item in quickEntries" :key="item.label" class="quick-item" @click="$router.push(item.path)">
+          <div class="quick-icon" :style="{ background: item.bg }"><el-icon :size="24"><component :is="item.icon" /></el-icon></div>
+          <span class="quick-label">{{ item.label }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 双栏歌曲榜单 -->
+    <section class="section-block">
+      <div class="rank-grid">
+        <div class="rank-panel">
+          <div class="section-header"><h2>新歌速递</h2><span class="section-more" @click="$router.push('/rank')">更多 &gt;</span></div>
+          <div class="rank-list">
+            <div v-for="(s, idx) in newSongs" :key="s.id" class="rank-item" @click="playSong(s)">
+              <span class="rank-idx index-normal">{{ idx + 1 }}</span>
+              <img :src="getImg(s.pic)" class="rank-cover" />
+              <div class="rank-info">
+                <div class="rank-name">{{ s.name }}</div>
+                <div class="rank-artist">
+                  <span v-if="s.singerUserId" class="link-artist" @click.stop="$router.push('/user-page/' + s.singerUserId)">{{ s.singer || s.singerName || '未知' }}</span>
+                  <span v-else>{{ s.singer || s.singerName || s.introduction || '未知' }}</span>
+                </div>
               </div>
-              <div class="play-icon-overlay">
-                <el-icon><VideoPlay /></el-icon>
-              </div>
+              <el-button size="small" text @click.stop="$router.push('/song/detail/' + s.id)">详情</el-button>
             </div>
-            <div class="meta">
-              <div class="title">{{ song.name }}</div>
-              <div class="artist">{{ song.introduction || song.artist }}</div>
+          </div>
+        </div>
+        <div class="rank-panel">
+          <div class="section-header"><h2>热门歌曲榜</h2><span class="section-more" @click="$router.push('/rank')">更多 &gt;</span></div>
+          <div class="rank-list">
+            <div v-for="(s, idx) in hotRankSongs" :key="s.id" class="rank-item" @click="playSong(s)">
+              <span :class="['rank-idx', idx < 3 ? 'idx-top' : 'idx-norm']">{{ idx + 1 }}</span>
+              <img :src="getImg(s.pic)" class="rank-cover" />
+              <div class="rank-info">
+                <div class="rank-name">{{ s.name }}</div>
+                <div class="rank-artist">
+                  <span v-if="s.singerUserId" class="link-artist" @click.stop="$router.push('/user-page/' + s.singerUserId)">{{ s.singer || s.singerName || '未知' }}</span>
+                  <span v-else>{{ s.singer || s.singerName || s.introduction || '未知' }}</span>
+                  <span class="rank-extra">▶ {{ fmtCount(s.playCount) }}</span>
+                </div>
+              </div>
+              <el-button size="small" text @click.stop="$router.push('/song/detail/' + s.id)">详情</el-button>
             </div>
           </div>
         </div>
       </div>
-      <div class="panel">
-        <div class="panel-title">热门帖子</div>
-        <div class="list-card" v-for="post in posts" :key="post.id" @click="router.push(`/post/detail/${post.id}`)">
-          <img v-if="post.cover" :src="attachImageUrl(post.cover)" class="post-cover" />
-          <div class="post-text">
-            <div class="item-title">{{ post.title }}</div>
-            <div class="item-sub">
-              <el-icon><Star /></el-icon>
-              <span>{{ post.likeCount }}</span>
-              <el-icon><ChatDotRound /></el-icon>
-              <span>{{ post.commentCount }}</span>
-            </div>
+    </section>
+
+    <!-- 校园热门歌手 -->
+    <section class="section-block">
+      <div class="section-header"><h2>校园热门音乐人</h2><span class="section-more" @click="$router.push('/singer')">更多 &gt;</span></div>
+      <div class="artist-row">
+        <div v-for="a in artists" :key="a.userId || a.id" class="artist-card" @click="$router.push('/user-page/' + (a.userId || a.id))">
+          <img :src="getImg(a.avatar || a.pic)" class="artist-avatar" />
+          <div class="artist-name">{{ a.username || a.name || '未知' }}</div>
+          <div class="artist-sub">{{ a.introduction || '校园音乐人' }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 热门社区动态 -->
+    <section class="section-block">
+      <div class="section-header"><h2>音乐社区热门</h2><span class="section-more" @click="$router.push('/community')">更多 &gt;</span></div>
+      <div class="post-grid">
+        <div v-for="p in posts" :key="p.id" class="post-card" @click="$router.push('/post/detail/' + p.id)">
+          <div class="post-top">
+            <img :src="getImg(p.avatar)" class="post-avatar" />
+            <span class="post-author">{{ p.username || '匿名' }}</span>
+          </div>
+          <img v-if="p.cover" :src="getImg(p.cover)" class="post-cover" />
+          <div class="post-title">{{ p.title }}</div>
+          <div class="post-stats">
+            <span><el-icon><Star /></el-icon> {{ p.likeCount || 0 }}</span>
+            <span><el-icon><ChatDotRound /></el-icon> {{ p.commentCount || 0 }}</span>
           </div>
         </div>
       </div>
@@ -58,302 +99,142 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { VideoPlay, Headset, Star, ChatDotRound } from '@element-plus/icons-vue'
+import { Medal, UserFilled, ChatDotRound, Upload, Star } from '@element-plus/icons-vue'
 import { getHotSongList } from '@/api/song'
 import { getPostPage } from '@/api/post'
+import { getAllSinger } from '@/api/singer'
 import { attachImageUrl } from '@/utils'
+import { usePlayQueue } from '@/store/playQueue'
 
 const router = useRouter()
-const songs = ref([])
+const queue = usePlayQueue()
+const allSongs = ref([])
 const posts = ref([])
-const hotSongs = computed(() => songs.value.filter((s) => s.status === 1).slice(0, 16))
-const carouselSongs = computed(() => songs.value.slice(0, 5))
+const artists = ref([])
 
-async function loadHotSongs() {
+const banners = [
+  { title: '校园原创音乐征集', subtitle: '用你的声音，唱出青春的模样', bg: 'https://picsum.photos/seed/m1/1200/320', link: '/upload' },
+  { title: '周杰伦 — 晴天', subtitle: '故事的小黄花，从出生那年就飘着', bg: 'https://picsum.photos/seed/m2/1200/320', link: '/rank' },
+  { title: '五月天 — 倔强', subtitle: '我和我最后的倔强，握紧双手绝对不放', bg: 'https://picsum.photos/seed/m3/1200/320', link: '/rank' },
+  { title: '音乐社区火热上线', subtitle: '来分享你的音乐故事，遇见志同道合的朋友', bg: 'https://picsum.photos/seed/m4/1200/320', link: '/community' },
+  { title: '校园音乐排行榜', subtitle: '发现校园里最受欢迎的好声音', bg: 'https://picsum.photos/seed/m5/1200/320', link: '/rank' }
+]
+
+const quickEntries = [
+  { label: '校园总榜', icon: Medal, bg: '#ffa502', path: '/rank' },
+  { label: '原创歌手', icon: UserFilled, bg: '#5352ed', path: '/singer' },
+  { label: '音乐社区', icon: ChatDotRound, bg: '#1e90ff', path: '/community' },
+  { label: '我要上传', icon: Upload, bg: '#ec4141', path: '/upload' }
+]
+
+const newSongs = computed(() => allSongs.value.filter(s => s.status === 1).sort((a, b) => new Date(b.createTime) - new Date(a.createTime)).slice(0, 8))
+const hotRankSongs = computed(() => allSongs.value.filter(s => s.status === 1).sort((a, b) => (b.playCount || 0) - (a.playCount || 0)).slice(0, 10))
+
+function getImg(p) { return attachImageUrl(p) }
+function goLink(p) { if (p) router.push(p) }
+function fmtCount(n) { if (!n) return '0'; if (n >= 10000) return (n / 10000).toFixed(1) + '万'; return String(n) }
+
+function playSong(s) {
+  queue.playSong({
+    id: s.id, name: s.name,
+    artist: s.singer || s.singerName || s.introduction || '未知',
+    cover: getImg(s.pic), singerUserId: s.singerUserId,
+    url: s.url && s.url.includes('://') ? s.url : attachImageUrl(s.url)
+  })
+}
+
+async function loadSongs() {
   try {
-    const res = await getHotSongList(5)
-    console.log("完整响应res:", res)
-    const result = res.data;
-    if (result.code === 200 && Array.isArray(result.data)) {
-      songs.value = result.data.map(item => ({
-        ...item,
-        pic: item.pic || item.cover || ''
-      }))
-    }
-  } catch (e) {
-    console.error('loadHotSongs error', e)
-  }
+    const res = await getHotSongList(50)
+    const data = res?.data?.data || res?.data || []
+    allSongs.value = Array.isArray(data) ? data : []
+  } catch (e) { console.error(e) }
 }
 
-async function loadHotPosts() {
+async function loadPosts() {
   try {
-    const res = await getPostPage(1, 10)
-    const result = res.data
-    if (result.code === 200) {
-      const list = Array.isArray(result.data?.records)
-        ? result.data.records
-        : Array.isArray(result.data)
-          ? result.data
-          : []
-      posts.value = list
-    }
-  } catch (e) {
-    console.error('loadHotPosts error', e)
-  }
+    const res = await getPostPage(1, 6)
+    const d = res?.data
+    const list = d?.data?.records || d?.records || (Array.isArray(d) ? d : [])
+    posts.value = list.slice(0, 3)
+  } catch (e) { console.error(e) }
 }
 
-function goSongDetail(id) {
-  router.push(`/song/detail/${id}`)
+async function loadArtists() {
+  try {
+    const res = await getAllSinger()
+    const d = res?.data || []
+    artists.value = (Array.isArray(d) ? d : []).slice(0, 6)
+  } catch (e) { console.error(e) }
 }
 
-onMounted(() => {
-  loadHotSongs()
-  loadHotPosts()
-})
+onMounted(() => { loadSongs(); loadPosts(); loadArtists() })
 </script>
 
 <style scoped>
-.home-page {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.carousel-section {
-  padding: 0 20px;
-  margin-bottom: 16px;
-}
-.carousel-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #111;
-  padding-bottom: 12px;
-  border-bottom: 1.5px solid #444;
-}
-.carousel-card {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  overflow: hidden;
-  border-radius: 16px;
-}
-.carousel-card:hover .carousel-info {
-  opacity: 1;
-}
-.carousel-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.carousel-info {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 16px;
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.65) 100%);
-  color: #fff;
-  opacity: 0.95;
-}
-.carousel-name {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-.carousel-artist {
-  font-size: 14px;
-  color: #eee;
-}
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.24em;
-  font-size: 12px;
-  color: #aaa;
-}
-.hero-card h1 {
-  margin: 8px 0;
-  font-size: 28px;
-}
-.hero-text {
-  color: #ddd;
-  margin-bottom: 14px;
-}
-.hero-actions {
-  display: flex;
-  gap: 12px;
-}
-.hero-stats {
-  display: flex;
-  gap: 18px;
-}
-.hero-stats > div {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 16px;
-  border: 1px solid #333;
-  border-radius: 12px;
-}
-.content-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 16px;
-  align-items: stretch;
-  padding: 0 20px;
-}
-.panel {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
-}
-.panel-song {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
-}
-.panel-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1.5px solid #444;
-}
-.hot-albums {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-.album-card {
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-}
-.cover-wrap {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  position: relative;
-  overflow: hidden;
-  border-radius: 10px;
-}
-.cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.play-icon-overlay {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 5px;
-  height: 5px;
-  pointer-events: none;
-}
-.play-icon-overlay :deep(.el-icon) {
-  color: #fff;
-  font-size: 18px;
-}
-.badge-overlay {
-  position: absolute;
-  left: 5px;
-  bottom: 5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  color: #fff;
-}
-.badge-overlay :deep(.el-icon) {
-  color: #fff;
-  font-size: 14px;
-}
-.badge-overlay span {
-  line-height: 1;
-}
-.meta {
-  width: 100%;
-}
-.title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.artist {
-  margin-top: 2px;
-  color: #666;
-  font-size: 12px;
-}
-.list-card {
-  display: flex;
-  gap: 12px;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.list-card:hover {
-  background: #f9f9f9;
-}
-.list-card:last-child {
-  border-bottom: none;
-}
-.post-cover {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-.post-text {
-  flex: 1;
-  min-width: 0;
-}
-.item-title {
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #111;
-  transition: color 0.2s ease;
-}
-.item-title:hover {
-  color: #409EFF;
-}
-.item-sub {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #666;
-  font-size: 13px;
-}
-.item-sub :deep(.el-icon) {
-  font-size: 14px;
-  color: #999;
-}
+.home-page { max-width: 1200px; margin: 80px auto 0; padding: 0 16px 100px; display: flex; flex-direction: column; gap: 24px; }
+
+.banner-section :deep(.el-carousel__arrow) { background: rgba(255,255,255,0.8); color: #333; width: 36px; height: 36px; border-radius: 50%; }
+.banner-section :deep(.el-carousel__container) { border-radius: 12px; overflow: hidden; }
+.banner-card { width: 100%; height: 100%; background-size: cover; background-position: center; cursor: pointer; border-radius: 12px; overflow: hidden; position: relative; }
+.banner-mask { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.5) 100%); }
+.banner-text { position: absolute; left: 40px; bottom: 40px; color: #fff; }
+.banner-text h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.banner-text p { font-size: 15px; opacity: 0.85; }
+
+.quick-section { margin-top: 4px; }
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.quick-item { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 8px; cursor: pointer; border-radius: 12px; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.3s, box-shadow 0.3s; }
+.quick-item:hover { transform: translateY(-4px); box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
+.quick-item:hover .quick-label { color: #ec4141; }
+.quick-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; transition: transform 0.3s; }
+.quick-item:hover .quick-icon { transform: scale(1.1); }
+.quick-label { font-size: 13px; color: #333; font-weight: 500; transition: color 0.3s; }
+
+.section-block { background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.section-header h2 { font-size: 20px; font-weight: 700; color: #333; }
+.section-more { font-size: 13px; color: #999; cursor: pointer; }
+.section-more:hover { color: #ec4141; }
+
+.rank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.rank-list { display: flex; flex-direction: column; }
+.rank-item { display: flex; align-items: center; gap: 12px; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+.rank-item:hover { background: #f5f5f7; }
+.rank-idx { width: 24px; text-align: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.idx-top { color: #ec4141; font-size: 20px; }
+.idx-norm { color: #999; }
+.rank-cover { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-size: 14px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-artist { font-size: 12px; color: #999; margin-top: 2px; }
+.link-artist { color: #ec4141; cursor: pointer; }
+.link-artist:hover { text-decoration: underline; }
+.rank-extra { margin-left: 6px; }
+
+.artist-row { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 4px; }
+.artist-row::-webkit-scrollbar { display: none; }
+.artist-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; min-width: 100px; padding: 8px; border-radius: 8px; transition: transform 0.3s; }
+.artist-card:hover { transform: translateY(-4px); }
+.artist-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; transition: transform 0.3s, border-color 0.3s; }
+.artist-avatar:hover { transform: scale(1.05); border-color: #ec4141; }
+.artist-name { font-size: 14px; font-weight: 500; color: #333; }
+.artist-sub { font-size: 12px; color: #999; }
+
+.post-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.post-card { cursor: pointer; border-radius: 8px; background: #fafafa; padding: 14px; transition: transform 0.3s, box-shadow 0.3s; }
+.post-card:hover { transform: translateY(-4px); box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
+.post-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.post-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.post-author { font-size: 13px; color: #666; font-weight: 500; }
+.post-cover { width: 100%; height: 140px; object-fit: cover; display: block; border-radius: 6px; margin-bottom: 10px; }
+.post-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.post-stats { display: flex; gap: 16px; font-size: 12px; color: #999; }
+.post-stats span { display: flex; align-items: center; gap: 4px; }
+
 @media (max-width: 900px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-    padding: 0;
-  }
-  .carousel-section {
-    padding: 0;
-  }
-  .hot-albums {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .quick-grid { grid-template-columns: repeat(2, 1fr); }
+  .rank-grid { grid-template-columns: 1fr; }
+  .post-grid { grid-template-columns: 1fr; }
 }
 </style>

@@ -60,6 +60,16 @@ const routes = [
           name:"UserPage",
           component:()=>import("@/pages/artist/ArtistDetail.vue")
       },
+      {
+        path: '/rank',
+        name: 'Rank',
+        component: () => import('@/pages/rank/Rank.vue')
+      },
+      {
+        path: '/singer',
+        name: 'Singer',
+        component: () => import('@/pages/singer/SingerList.vue')
+      },
     ]
   },
   {
