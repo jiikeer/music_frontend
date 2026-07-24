@@ -1,7 +1,7 @@
 <template>
   <div class="song-list-page">
   <section class="section-block">
-    <div class="section-header">热门新碟</div>
+    <div class="section-header">热门歌曲</div>
     <div class="album-grid">
       <div
         class="album-item"
@@ -19,13 +19,14 @@
         <div class="meta">
           <div class="title">{{ song.name }}</div>
           <div class="artist">{{ song.introduction || song.artist }}</div>
+          <div class="play-count">▶ {{ fmtCount(song.playCount || 0) }}</div>
         </div>
       </div>
     </div>
   </section>
 
   <section class="section-block">
-    <div class="section-header">全部新碟</div>
+    <div class="section-header">全部歌曲</div>
     <div class="album-grid">
       <div
         class="album-item"
@@ -73,7 +74,9 @@ const songs = ref([])
 const pageSize = 35
 const currentPage = ref(1)
 
-const hotSongs = computed(() => songs.value.filter((song) => song.status === 1).slice(0, 10))
+const hotSongs = computed(() => {
+  return [...songs.value].sort((a, b) => (b.playCount || 0) - (a.playCount || 0)).slice(0, 10)
+})
 const pagedSongs = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return songs.value.slice(start, start + pageSize)
@@ -91,12 +94,20 @@ onMounted(async () => {
       pic: item.pic || item.cover || '',
       cover: item.pic || item.cover || '',
       url: item.url || '',
-      status: item.status
+      status: item.status,
+      playCount: item.playCount || 0
     }))
   } catch (e) {
     console.error('获取歌曲列表失败:', e)
   }
 })
+
+function fmtCount(n) {
+  if (!n) return '0'
+  if (n >= 10000) return (n / 10000).toFixed(1) + 'w'
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k'
+  return String(n)
+}
 
 function playSong(song) {
   // 通知全局播放器播放此曲
@@ -188,6 +199,11 @@ function handlePageChange(page) {
   margin-top: 6px;
   color: #666;
   font-size: 13px;
+}
+.play-count {
+  margin-top: 4px;
+  color: #999;
+  font-size: 12px;
 }
 .section-block {
   display: flex;
